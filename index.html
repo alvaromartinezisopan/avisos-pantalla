@@ -12,7 +12,6 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Contenedor Principal */
         #main-container {
             display: flex;
             flex-direction: column;
@@ -20,70 +19,39 @@
             padding: 20px;
             box-sizing: border-box;
             gap: 15px;
-            position: relative;
         }
 
-        /* Contador Superior discreto */
-        #header-info {
-            display: flex;
-            justify-content: flex-end;
-            min-height: 20px;
-            padding-right: 10px;
-        }
-        .count-badge {
-            font-size: 12px; font-weight: 800; color: rgba(0,0,0,0.3);
-            text-transform: uppercase; letter-spacing: 1px;
-            background: rgba(255,255,255,0.4); padding: 4px 12px; border-radius: 20px;
-        }
-
-        /* --- SECCIÓN FIJA: URGENCIAS --- */
+        /* --- ZONA FIJA (Sin contador arriba) --- */
         #urgentes-fixed {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            flex-shrink: 0; /* No permite que se encoja */
-            z-index: 10; /* Por encima del scroll */
-            position: relative;
-            padding-bottom: 5px; /* Pequeño colchón antes del degradado */
+            display: flex; flex-direction: column; gap: 15px;
+            flex-shrink: 0; z-index: 10;
+            padding: 10px 20px;
         }
 
-        /* --- SECCIÓN SCROLL: RESTO DE AVISOS --- */
+        /* --- ZONA SCROLL --- */
         #scroll-viewport {
             flex-grow: 1;
-            overflow: hidden;
             position: relative;
             z-index: 1;
-            
-            /* --- MEJORA: DOBLE DEGRADADO (Arriba y Abajo) --- */
-            /* Desvanece el contenido al entrar (top) y al salir (bottom) */
-            -webkit-mask-image: linear-gradient(
-                to bottom,
-                transparent 0%,
-                black 8%,    /* Degradado de entrada suave */
-                black 92%,   /* Zona visible total */
-                transparent 100% /* Degradado de salida suave */
-            );
-            mask-image: linear-gradient(
-                to bottom,
-                transparent 0%,
-                black 8%,
-                black 92%,
-                transparent 100%
-            );
+            overflow: hidden;
+            padding: 0 20px; 
+            transition: -webkit-mask-image 0.5s ease;
+        }
+
+        .with-mask {
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
+            mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
         }
 
         #normales-stack {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            width: 100%;
+            display: flex; flex-direction: column; gap: 15px;
+            width: calc(100% - 40px);
             position: absolute;
-            top: 0;
-            transition: top 1.5s ease-in-out; /* Velocidad del auto-scroll */
-            padding-top: 10px; /* Evita que la primera tarjeta normal toque el degradado inmediatamente */
+            top: 0; transition: top 1.2s ease-in-out;
+            padding: 10px 0;
         }
 
-        /* --- ESTILOS DE TARJETA (Limpios) --- */
+        /* --- TARJETAS --- */
         .notif-card {
             position: relative;
             width: 100%; border-radius: 22px;
@@ -91,27 +59,28 @@
             padding: 18px 24px; box-sizing: border-box;
             border: 1px solid rgba(255,255,255,0.8);
             box-shadow: 0 6px 15px rgba(0,0,0,0.05);
-            transform: translateX(100%); opacity: 0;
+            transform: translateX(110%); opacity: 0;
             transition: transform 0.6s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.6s ease;
         }
         .notif-card.show { transform: translateX(0); opacity: 1; }
 
         .notif-card::after {
-            content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: 22px; z-index: -1; pointer-events: none;
+            content: ""; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
+            border-radius: 24px; z-index: -1; pointer-events: none;
         }
 
-        /* Glows (Pulso y Entrada) */
         .urgente-glow::after { animation: pulseUrgente 2s infinite ease-in-out; opacity: 1; }
-        .active-glow::after { box-shadow: 0 0 15px 2px var(--glow-color); animation: glowFade 8s forwards; }
+        .active-glow::after { 
+            box-shadow: 0 0 20px 5px var(--glow-color); 
+            animation: glowFade 8s forwards; 
+        }
 
         @keyframes pulseUrgente {
-            0%, 100% { box-shadow: 0 0 15px 4px rgba(255, 59, 48, 0.5); }
-            50% { box-shadow: 0 0 25px 10px rgba(255, 59, 48, 0.8); }
+            0%, 100% { box-shadow: 0 0 15px 5px rgba(255, 59, 48, 0.4); }
+            50% { box-shadow: 0 0 30px 12px rgba(255, 59, 48, 0.7); }
         }
         @keyframes glowFade { 0%, 100% { opacity: 0; } 10%, 90% { opacity: 1; } }
 
-        /* Punto Azul de Nuevo */
         .new-indicator-dot {
             position: absolute; top: 15px; right: 20px;
             width: 10px; height: 10px; background-color: #007aff; border-radius: 50%;
@@ -122,7 +91,6 @@
         }
         @keyframes sonar { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(3); opacity: 0; } }
 
-        /* Iconografía Estática */
         .app-icon {
             width: 58px; height: 58px; border-radius: 16px;
             display: flex; align-items: center; justify-content: center;
@@ -144,10 +112,7 @@
 <body>
 
     <div id="main-container">
-        <div id="header-info"></div>
-        
         <div id="urgentes-fixed"></div>
-        
         <div id="scroll-viewport">
             <div id="normales-stack"></div>
         </div>
@@ -181,45 +146,32 @@
                 rows.forEach((row, index) => {
                     const c = row.c;
                     if (!c || (c[5]?.v || "").toString().toUpperCase() !== "SI") return;
-
                     let fechaAviso = null;
                     if (c[3]?.v) {
                         const d = eval("new " + c[3].v);
                         fechaAviso = new Date(d.getFullYear(), d.getMonth(), d.getDate());
                     }
                     if (fechaAviso && fechaAviso < hoy) return;
-
                     let etiquetaFecha = c[3]?.f || "", esHoy = (fechaAviso && fechaAviso.getTime() === hoy.getTime());
                     if (esHoy) etiquetaFecha = "HOY";
-
                     let catTexto = (c[2]?.v || "").toString();
                     let categoria = catTexto.includes("Urgen") ? "Urgente" : (catTexto.includes("Mante") ? "Mantenimiento" : (catTexto.includes("Visita") ? "Visitas" : (catTexto.includes("Seguri") ? "Seguridad" : (catTexto.includes("Penta") ? "Pentano" : "Aviso"))));
-
                     const data = { id: `notif-${index}`, titulo: c[0]?.v || "Aviso", msg: c[1]?.v || "", cat: categoria, fecha: etiquetaFecha, hora: c[4]?.f || "", esNuevo: esHoy };
-
-                    if (data.cat === 'Urgente') urgentes.push(data);
-                    else normales.push(data);
+                    if (data.cat === 'Urgente') urgentes.push(data); else normales.push(data);
                 });
 
-                // Contador
-                const total = urgentes.length + normales.length;
-                document.getElementById('header-info').innerHTML = total > 0 ? `<div class="count-badge">${total} avisos activos</div>` : '';
-
-                // Renderizar Urgentes (Fijos)
                 const fixedCont = document.getElementById('urgentes-fixed');
                 urgentes.forEach((d, i) => updateOrCreate(fixedCont, d.id, d, false, i));
 
-                // Renderizar Normales (Scroll)
                 const scrollCont = document.getElementById('normales-stack');
-                if (total === 0) {
+                if (urgentes.length === 0 && normales.length === 0) {
                     updateOrCreate(scrollCont, 'empty', { titulo: "Sin avisos", msg: "Todo en orden por ahora.", cat: 'Empty', esNuevo: false }, true, 0);
                 } else {
                     normales.forEach((d, i) => updateOrCreate(scrollCont, d.id, d, false, i));
                 }
 
-                // Limpieza de antiguos
                 const activeIds = [...urgentes, ...normales].map(d => d.id);
-                if(total === 0) activeIds.push('empty');
+                if(urgentes.length === 0 && normales.length === 0) activeIds.push('empty');
                 document.querySelectorAll('.notif-card').forEach(n => {
                     if(!activeIds.includes(n.id)) { n.classList.remove('show'); setTimeout(() => n.remove(), 600); }
                 });
@@ -230,61 +182,48 @@
         function updateOrCreate(container, id, data, isEmpty, index) {
             let el = document.getElementById(id);
             const tema = assets[data.cat];
-
             if (!el) {
                 el = document.createElement('div'); el.id = id; el.className = 'notif-card';
                 el.innerHTML = `<div class="new-indicator-dot"></div><div class="app-icon"></div><div class="content"><div class="title"></div><div class="message"></div></div><div class="date-badge"></div>`;
                 container.appendChild(el);
                 setTimeout(() => el.classList.add('show'), 100 * index);
             }
-
-            if (el.parentElement !== container) container.appendChild(el); // Mover si cambió de categoría
-            
+            if (el.parentElement !== container) container.appendChild(el);
             el.style.backgroundColor = tema.bg;
             el.classList.remove('urgente-glow', 'active-glow');
             if (data.cat === 'Urgente') el.classList.add('urgente-glow');
             else if (!isEmpty) { el.classList.add('active-glow'); el.style.setProperty('--glow-color', tema.icon + '30'); }
-
             const icon = el.querySelector('.app-icon');
             icon.style.backgroundColor = tema.icon; icon.innerHTML = tema.svg;
-            
             el.querySelector('.title').innerText = data.titulo; el.querySelector('.title').style.color = tema.text;
             el.querySelector('.message').innerText = data.msg;
-            
             const dot = el.querySelector('.new-indicator-dot');
             dot.style.display = (data.esNuevo && data.cat !== 'Urgente') ? 'block' : 'none';
-
             const badge = el.querySelector('.date-badge');
             if (data.fecha) { badge.style.display = 'block'; badge.innerText = `${data.fecha} ${data.hora || ''}`; badge.style.color = tema.text; }
             else badge.style.display = 'none';
         }
 
-        // --- LÓGICA DE AUTO-SCROLL (Ajustada para mayor suavidad) ---
         function handleAutoScroll() {
             const viewport = document.getElementById('scroll-viewport');
             const stack = document.getElementById('normales-stack');
-            
-            // Altura real del contenido vs altura disponible
             const scrollMax = stack.offsetHeight - viewport.offsetHeight;
 
             if (scrollMax > 0) {
-                // Hay exceso de contenido -> scroll activado
+                viewport.classList.add('with-mask');
                 let currentTop = parseInt(stack.style.top) || 0;
-                
-                if (currentTop <= -(scrollMax + 20)) scrollDir = -1; // Llegó al final (añadimos margen)
-                if (currentTop >= 0) scrollDir = 1; // Volvió al inicio
-
-                // Incremento de scroll (30px cada 3s)
-                stack.style.top = (currentTop - (30 * scrollDir)) + "px";
+                if (currentTop <= -(scrollMax + 20)) scrollDir = -1;
+                if (currentTop >= 0) scrollDir = 1;
+                stack.style.top = (currentTop - (40 * scrollDir)) + "px";
             } else {
-                // El contenido cabe perfectamente -> resetear scroll
+                viewport.classList.remove('with-mask');
                 stack.style.top = "0px";
             }
         }
 
-        setInterval(checkSheet, 5000); // Sincronización con Google
-        setInterval(handleAutoScroll, 3000); // Movimiento de scroll cada 3s
-        checkSheet(); // Carga inicial
+        setInterval(checkSheet, 5000);
+        setInterval(handleAutoScroll, 3000);
+        checkSheet();
     </script>
 </body>
 </html>
