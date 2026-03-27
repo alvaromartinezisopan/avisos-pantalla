@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background-color: transparent !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        #notification-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 25px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .notif-card {
+            position: relative;
+            width: 100%;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-sizing: border-box;
+            border: 1px solid rgba(255,255,255,0.7);
+            
+            /* Entrada suave */
+            transform: translateX(110%);
+            opacity: 0;
+            transition: transform 0.8s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.8s ease;
+        }
+
+        .notif-card.show { 
+            transform: translateX(0); 
+            opacity: 1;
+        }
+
+        /* ANIMACIÓN DEL GLOW (SOLO UNA VEZ) */
+        @keyframes glowOnce {
+            0% { box-shadow: 0 0 0px 0px transparent; }
+            10% { box-shadow: 0 0 25px 2px var(--glow-color), 0 0 10px var(--glow-color); }
+            90% { box-shadow: 0 0 25px 2px var(--glow-color), 0 0 10px var(--glow-color); }
+            100% { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        }
+
+        /* Se ejecuta una sola vez durante 10 segundos y se queda en el estado final */
+        .active-glow {
+            animation: glowOnce 10s ease-out forwards;
+        }
+
+        .app-icon {
+            width: 52px; height: 52px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+        }
+
+        .app-icon svg { width: 34px; height: 34px; fill: white; }
+        .content { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+        .title { font-weight: 800; font-size: 19px; letter-spacing: -0.4px; }
+        .message { font-size: 16px; line-height: 1.3; font-weight: 600; }
+
+        .date-badge {
+            font-size: 12px; font-weight: 900;
+            padding: 7px 14px; border-radius: 12px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .empty-state { opacity: 0.8; animation: none !important; box-shadow: none !important; border: 1px dashed rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body>
+
+    <div id="notification-stack"></div>
+
+    <script>
+        const SHEET_ID = '168DpGwqRcSsXtJoGPNqzJtHhtjjfFtrpcqLnnKq8CIY';
+        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&refresh=${Date.now()}`;
+        
+        const assets = {
+            'Aviso': { bg: 'rgba(220, 240, 255, 0.98)', icon: '#007BB0', text: '#00354d', svg: '<svg viewBox="0 0 24 24"><path d="M12 22a2.98 2.98 0 0 1-2.9-2h5.8a2.98 2.98 0 0 1-2.9 2zm9-3V9c0-4.97-4.03-9-9-9S3 4.03 3 9v7l-2 2v1h22v-1l-2-2z"/></svg>'},
+            'Mantenimiento': { bg: 'rgba(255, 242, 210, 0.98)', icon: '#F39C12', text: '#704000', svg: '<svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.5 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>'},
+            'Seguridad': { bg: 'rgba(255, 225, 225, 0.98)', icon: '#E74C3C', text: '#781b1b', svg: '<svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12h-7V6.3l7-3.11v8.8z"/></svg>'},
+            'Visitas': { bg: 'rgba(225, 255, 225, 0.98)', icon: '#27AE60', text: '#064d26', svg: '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'},
+            'Pentano': { bg: 'rgba(248, 230, 255, 0.98)', icon: '#8E44AD', text: '#4A235A', svg: '<svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-2 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>'},
+            'Empty': { bg: 'rgba(255, 255, 255, 0.4)', icon: '#007297', text: '#004a63', svg: '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>'}
+        };
+
+        async function checkSheet() {
+            try {
+                const response = await fetch(url);
+                const text = await response.text();
+                const json = JSON.parse(text.substr(47).slice(0, -2));
+                const rows = json.table.rows;
+                const activeIds = [];
+
+                rows.forEach((row, index) => {
+                    const c = row.c;
+                    if (!c) return;
+                    const activo = (c[5]?.v || "").toString().toUpperCase();
+
+                    if (activo === "SI") {
+                        const id = `notif-${index}`;
+                        activeIds.push(id);
+                        
+                        let catSheet = (c[2]?.v || "").toString();
+                        let categoriaEstilo = "Aviso"; 
+                        if (catSheet.includes("Mante")) categoriaEstilo = "Mantenimiento";
+                        else if (catSheet.includes("Visita")) categoriaEstilo = "Visitas";
+                        else if (catSheet.includes("Seguri")) categoriaEstilo = "Seguridad";
+                        else if (catSheet.includes("Penta")) categoriaEstilo = "Pentano";
+
+                        const tituloReal = (c[0]?.v && c[0]?.v.toString().trim() !== "") ? c[0].v : "Notificación";
+                        const mensajeReal = c[1]?.v || "";
+                        const tiempo = (c[3]?.f || "") + " " + (c[4]?.f || "");
+
+                        updateOrCreate(id, { 
+                            titulo: tituloReal, msg: mensajeReal, cat: categoriaEstilo, fecha: tiempo.trim()
+                        }, false, activeIds.length);
+                    }
+                });
+
+                if (activeIds.length === 0) {
+                    updateOrCreate('empty-msg', {
+                        titulo: "", msg: "No hay avisos activos en este momento.", cat: 'Empty', fecha: ""
+                    }, true, 1);
+                    activeIds.push('empty-msg');
+                }
+
+                document.querySelectorAll('.notif-card').forEach(n => {
+                    if (!activeIds.includes(n.id)) {
+                        n.classList.remove('show');
+                        setTimeout(() => n.remove(), 800);
+                    }
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        function updateOrCreate(id, data, isEmptyState, delayFactor) {
+            const stack = document.getElementById('notification-stack');
+            let el = document.getElementById(id);
+            const tema = assets[data.cat] || assets['Aviso'];
+
+            if (!el) {
+                el = document.createElement('div');
+                el.id = id; 
+                el.className = 'notif-card' + (isEmptyState ? ' empty-state' : ' active-glow');
+                el.innerHTML = `
+                    <div class="app-icon"></div>
+                    <div class="content">
+                        <div class="title"></div>
+                        <div class="message"></div>
+                    </div>
+                    <div class="date-badge"></div>
+                `;
+                stack.appendChild(el); 
+                setTimeout(() => el.classList.add('show'), 150 * delayFactor);
+            }
+            
+            if (!isEmptyState) {
+                el.style.setProperty('--glow-color', tema.icon + '80'); 
+            }
+
+            el.style.backgroundColor = tema.bg;
+            const icon = el.querySelector('.app-icon');
+            icon.style.backgroundColor = tema.icon;
+            icon.innerHTML = tema.svg;
+
+            const t = el.querySelector('.title');
+            t.innerText = data.titulo;
+            t.style.display = data.titulo === "" ? "none" : "block";
+            t.style.color = tema.text;
+            
+            const msg = el.querySelector('.message');
+            msg.innerText = data.msg;
+            msg.style.color = tema.text;
+
+            const dateBadge = el.querySelector('.date-badge');
+            if (data.fecha && !isEmptyState) {
+                dateBadge.innerText = data.fecha;
+                dateBadge.style.display = 'block';
+                dateBadge.style.color = tema.text;
+            } else {
+                dateBadge.style.display = 'none';
+            }
+        }
+
+        setInterval(checkSheet, 5000);
+        checkSheet();
+    </script>
+</body>
+</html>
