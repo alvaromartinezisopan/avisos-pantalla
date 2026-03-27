@@ -58,7 +58,7 @@
             0% { opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { opacity: 0; }
         }
 
-        /* --- PUNTO AZUL ANIMADO (SONAR) --- */
+        /* --- PUNTO AZUL ANIMADO (Solo para No-Urgentes de Hoy) --- */
         .new-indicator-dot {
             position: absolute;
             top: 15px; right: 20px;
@@ -69,7 +69,6 @@
             display: none;
         }
 
-        /* El efecto de pulso (ondas) */
         .new-indicator-dot::before {
             content: '';
             position: absolute;
@@ -86,7 +85,6 @@
             100% { transform: scale(3); opacity: 0; }
         }
 
-        /* --- RESTO DE ESTILOS --- */
         .app-icon {
             width: 52px; height: 52px; border-radius: 14px;
             display: flex; align-items: center; justify-content: center;
@@ -199,8 +197,13 @@
             el.querySelector('.title').innerText = data.titulo; el.querySelector('.title').style.color = tema.text;
             el.querySelector('.message').innerText = data.msg; el.querySelector('.message').style.color = tema.text;
 
+            // --- LÓGICA DEL PUNTO AZUL: Solo si es Hoy Y NO es Urgente ---
             const dot = el.querySelector('.new-indicator-dot');
-            dot.style.display = (data.esNuevo && !isEmptyState) ? 'block' : 'none';
+            if (data.esNuevo && data.cat !== 'Urgente' && !isEmptyState) {
+                dot.style.display = 'block';
+            } else {
+                dot.style.display = 'none';
+            }
 
             const bFecha = el.querySelector('.b-fecha'), bHora = el.querySelector('.b-hora'), timeCont = el.querySelector('.time-container');
             if (!isEmptyState && (data.fecha || data.hora)) {
