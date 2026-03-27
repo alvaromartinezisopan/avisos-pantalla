@@ -65,6 +65,17 @@
             animation: glowFadeOnce 10s ease-out forwards;
         }
 
+        /* ESTILO URGENTE */
+        .urgente-glow::after {
+            animation: pulseUrgente 2s infinite ease-in-out !important;
+            opacity: 1 !important;
+        }
+
+        @keyframes pulseUrgente {
+            0%, 100% { box-shadow: 0 0 25px 3px rgba(231, 76, 60, 0.7), 0 0 10px rgba(231, 76, 60, 0.5); }
+            50% { box-shadow: 0 0 35px 6px rgba(231, 76, 60, 0.9), 0 0 15px rgba(231, 76, 60, 0.7); }
+        }
+
         .app-icon {
             width: 52px; height: 52px;
             border-radius: 14px;
@@ -78,13 +89,12 @@
         .title { font-weight: 800; font-size: 19px; letter-spacing: -0.4px; }
         .message { font-size: 16px; line-height: 1.3; font-weight: 600; }
 
-        /* Contenedor para las dos burbujas EN FILA */
         .time-container {
             display: flex;
-            flex-direction: row; /* Una al lado de otra */
-            gap: 8px; /* Espacio entre burbujas */
+            flex-direction: row;
+            gap: 8px;
             align-items: center;
-            flex-shrink: 0; /* Que no se encojan */
+            flex-shrink: 0;
         }
 
         .date-badge {
@@ -113,6 +123,7 @@
         const SHEET_ID = '168DpGwqRcSsXtJoGPNqzJtHhtjjfFtrpcqLnnKq8CIY';
         
         const assets = {
+            'Urgente': { bg: 'rgba(255, 235, 235, 0.98)', icon: '#E74C3C', text: '#781b1b', svg: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>'},
             'Aviso': { bg: 'rgba(220, 240, 255, 0.98)', icon: '#007BB0', text: '#00354d', svg: '<svg viewBox="0 0 24 24"><path d="M12 22a2.98 2.98 0 0 1-2.9-2h5.8a2.98 2.98 0 0 1-2.9 2zm9-3V9c0-4.97-4.03-9-9-9S3 4.03 3 9v7l-2 2v1h22v-1l-2-2z"/></svg>'},
             'Mantenimiento': { bg: 'rgba(255, 242, 210, 0.98)', icon: '#F39C12', text: '#704000', svg: '<svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.5 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>'},
             'Seguridad': { bg: 'rgba(255, 225, 225, 0.98)', icon: '#E74C3C', text: '#781b1b', svg: '<svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12h-7V6.3l7-3.11v8.8z"/></svg>'},
@@ -141,7 +152,8 @@
                         
                         let catSheet = (c[2]?.v || "").toString();
                         let categoriaEstilo = "Aviso"; 
-                        if (catSheet.includes("Mante")) categoriaEstilo = "Mantenimiento";
+                        if (catSheet.includes("Urgen")) categoriaEstilo = "Urgente";
+                        else if (catSheet.includes("Mante")) categoriaEstilo = "Mantenimiento";
                         else if (catSheet.includes("Visita")) categoriaEstilo = "Visitas";
                         else if (catSheet.includes("Seguri")) categoriaEstilo = "Seguridad";
                         else if (catSheet.includes("Penta")) categoriaEstilo = "Pentano";
@@ -149,11 +161,13 @@
                         const tituloReal = (c[0]?.v && c[0]?.v.toString().trim() !== "") ? c[0].v : "Notificación";
                         const mensajeReal = c[1]?.v || "";
                         
-                        const fecha = c[3]?.f || c[3]?.v || "";
-                        const hora = c[4]?.f || c[4]?.v || "";
+                        // Capturamos fecha y hora por separado
+                        const fechaVal = c[3]?.f || c[3]?.v || "";
+                        const horaVal = c[4]?.f || c[4]?.v || "";
 
                         updateOrCreate(id, { 
-                            titulo: tituloReal, msg: mensajeReal, cat: categoriaEstilo, fecha: fecha, hora: hora
+                            titulo: tituloReal, msg: mensajeReal, cat: categoriaEstilo, 
+                            fecha: fechaVal, hora: horaVal
                         }, false, activeIds.length);
                     }
                 });
@@ -180,7 +194,7 @@
             if (!el) {
                 el = document.createElement('div');
                 el.id = id; 
-                el.className = 'notif-card' + (isEmptyState ? ' empty-state' : ' active-glow');
+                el.className = 'notif-card'; // Clase base
                 el.innerHTML = `
                     <div class="app-icon"></div>
                     <div class="content">
@@ -196,7 +210,14 @@
                 setTimeout(() => el.classList.add('show'), 150 * delayFactor);
             }
             
-            if (!isEmptyState) {
+            // Gestionar clases de animación/estado
+            el.classList.remove('empty-state', 'urgente-glow', 'active-glow');
+            if (isEmptyState) {
+                el.classList.add('empty-state');
+            } else if (data.cat === 'Urgente') {
+                el.classList.add('urgente-glow');
+            } else {
+                el.classList.add('active-glow');
                 el.style.setProperty('--glow-color', tema.icon + '80'); 
             }
 
@@ -214,10 +235,14 @@
             msg.innerText = data.msg;
             msg.style.color = tema.text;
 
+            // Gestión de globos fecha/hora
             const bFecha = el.querySelector('.b-fecha');
             const bHora = el.querySelector('.b-hora');
+            const timeCont = el.querySelector('.time-container');
 
-            if (!isEmptyState) {
+            if (!isEmptyState && (data.fecha || data.hora)) {
+                timeCont.style.display = 'flex';
+                
                 if (data.fecha) {
                     bFecha.innerText = data.fecha;
                     bFecha.style.display = 'block';
@@ -230,8 +255,7 @@
                     bHora.style.color = tema.text;
                 } else { bHora.style.display = 'none'; }
             } else {
-                bFecha.style.display = 'none';
-                bHora.style.display = 'none';
+                timeCont.style.display = 'none';
             }
         }
 
