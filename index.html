@@ -29,16 +29,17 @@
             align-items: center;
             gap: 18px;
             padding: 16px 20px;
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
             box-sizing: border-box;
             border: 1px solid rgba(255,255,255,0.7);
             
+            /* Sombra base estática suave */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+
             /* Entrada suave */
             transform: translateX(110%);
             opacity: 0;
             transition: transform 0.8s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.8s ease;
+            z-index: 1;
         }
 
         .notif-card.show { 
@@ -46,17 +47,27 @@
             opacity: 1;
         }
 
-        /* ANIMACIÓN DEL GLOW (SOLO UNA VEZ) */
-        @keyframes glowOnce {
-            0% { box-shadow: 0 0 0px 0px transparent; }
-            10% { box-shadow: 0 0 25px 2px var(--glow-color), 0 0 10px var(--glow-color); }
-            90% { box-shadow: 0 0 25px 2px var(--glow-color), 0 0 10px var(--glow-color); }
-            100% { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        /* --- GLOW EXTERIOR QUE NO HACE VIBRAR EL TEXTO --- */
+        .notif-card::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 20px;
+            box-shadow: 0 0 25px 2px var(--glow-color), 0 0 10px var(--glow-color);
+            opacity: 0;
+            z-index: -1; 
+            pointer-events: none;
         }
 
-        /* Se ejecuta una sola vez durante 10 segundos y se queda en el estado final */
-        .active-glow {
-            animation: glowOnce 10s ease-out forwards;
+        @keyframes glowFadeOnce {
+            0% { opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .active-glow::after {
+            animation: glowFadeOnce 10s ease-out forwards;
         }
 
         .app-icon {
@@ -75,11 +86,13 @@
         .date-badge {
             font-size: 12px; font-weight: 900;
             padding: 7px 14px; border-radius: 12px;
-            background: rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.6);
             border: 1px solid rgba(0,0,0,0.1);
+            white-space: nowrap;
         }
 
         .empty-state { opacity: 0.8; animation: none !important; box-shadow: none !important; border: 1px dashed rgba(0,0,0,0.2); }
+        .empty-state::after { display: none !important; }
     </style>
 </head>
 <body>
@@ -88,7 +101,6 @@
 
     <script>
         const SHEET_ID = '168DpGwqRcSsXtJoGPNqzJtHhtjjfFtrpcqLnnKq8CIY';
-        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&refresh=${Date.now()}`;
         
         const assets = {
             'Aviso': { bg: 'rgba(220, 240, 255, 0.98)', icon: '#007BB0', text: '#00354d', svg: '<svg viewBox="0 0 24 24"><path d="M12 22a2.98 2.98 0 0 1-2.9-2h5.8a2.98 2.98 0 0 1-2.9 2zm9-3V9c0-4.97-4.03-9-9-9S3 4.03 3 9v7l-2 2v1h22v-1l-2-2z"/></svg>'},
@@ -101,6 +113,7 @@
 
         async function checkSheet() {
             try {
+                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&refresh=${Date.now()}`;
                 const response = await fetch(url);
                 const text = await response.text();
                 const json = JSON.parse(text.substr(47).slice(0, -2));
@@ -125,18 +138,20 @@
 
                         const tituloReal = (c[0]?.v && c[0]?.v.toString().trim() !== "") ? c[0].v : "Notificación";
                         const mensajeReal = c[1]?.v || "";
-                        const tiempo = (c[3]?.f || "") + " " + (c[4]?.f || "");
+                        
+                        // --- MEJORA EN LA EXTRACCIÓN DE FECHA Y HORA ---
+                        const fechaParte = c[3]?.f || c[3]?.v || "";
+                        const horaParte = c[4]?.f || c[4]?.v || "";
+                        const tiempoCompleto = (fechaParte + " " + horaParte).trim();
 
                         updateOrCreate(id, { 
-                            titulo: tituloReal, msg: mensajeReal, cat: categoriaEstilo, fecha: tiempo.trim()
+                            titulo: tituloReal, msg: mensajeReal, cat: categoriaEstilo, fecha: tiempoCompleto
                         }, false, activeIds.length);
                     }
                 });
 
                 if (activeIds.length === 0) {
-                    updateOrCreate('empty-msg', {
-                        titulo: "", msg: "No hay avisos activos en este momento.", cat: 'Empty', fecha: ""
-                    }, true, 1);
+                    updateOrCreate('empty-msg', { titulo: "", msg: "No hay avisos activos.", cat: 'Empty', fecha: "" }, true, 1);
                     activeIds.push('empty-msg');
                 }
 
