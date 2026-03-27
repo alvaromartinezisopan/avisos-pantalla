@@ -34,7 +34,7 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             transform: translateX(110%);
             opacity: 0;
-            transition: transform 0.8s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.8s ease;
+            transition: transform 0.8s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.8s ease, order 0.5s ease;
             z-index: 1;
         }
 
@@ -65,7 +65,7 @@
             animation: glowFadeOnce 10s ease-out forwards;
         }
 
-        /* ESTILO URGENTE */
+        /* ESTILO URGENTE CON PARPADEO */
         .urgente-glow::after {
             animation: pulseUrgente 2s infinite ease-in-out !important;
             opacity: 1 !important;
@@ -139,7 +139,9 @@
                 const text = await response.text();
                 const json = JSON.parse(text.substr(47).slice(0, -2));
                 const rows = json.table.rows;
-                const activeIds = [];
+                
+                let urgentes = [];
+                let normales = [];
 
                 rows.forEach((row, index) => {
                     const c = row.c;
@@ -147,9 +149,6 @@
                     const activo = (c[5]?.v || "").toString().toUpperCase();
 
                     if (activo === "SI") {
-                        const id = `notif-${index}`;
-                        activeIds.push(id);
-                        
                         let catSheet = (c[2]?.v || "").toString();
                         let categoriaEstilo = "Aviso"; 
                         if (catSheet.includes("Urgen")) categoriaEstilo = "Urgente";
@@ -158,25 +157,38 @@
                         else if (catSheet.includes("Seguri")) categoriaEstilo = "Seguridad";
                         else if (catSheet.includes("Penta")) categoriaEstilo = "Pentano";
 
-                        const tituloReal = (c[0]?.v && c[0]?.v.toString().trim() !== "") ? c[0].v : "Notificación";
-                        const mensajeReal = c[1]?.v || "";
-                        
-                        // Capturamos fecha y hora por separado
-                        const fechaVal = c[3]?.f || c[3]?.v || "";
-                        const horaVal = c[4]?.f || c[4]?.v || "";
+                        const data = {
+                            id: `notif-${index}`,
+                            titulo: (c[0]?.v && c[0]?.v.toString().trim() !== "") ? c[0].v : "Notificación",
+                            msg: c[1]?.v || "",
+                            cat: categoriaEstilo,
+                            fecha: c[3]?.f || c[3]?.v || "",
+                            hora: c[4]?.f || c[4]?.v || ""
+                        };
 
-                        updateOrCreate(id, { 
-                            titulo: tituloReal, msg: mensajeReal, cat: categoriaEstilo, 
-                            fecha: fechaVal, hora: horaVal
-                        }, false, activeIds.length);
+                        if (categoriaEstilo === "Urgente") urgentes.push(data);
+                        else normales.push(data);
                     }
                 });
 
-                if (activeIds.length === 0) {
-                    updateOrCreate('empty-msg', { titulo: "", msg: "Todo en orden. No hay avisos.", cat: 'Empty', fecha: "", hora: "" }, true, 1);
+                // Unimos las listas: Urgentes primero
+                const finalData = [...urgentes, ...normales];
+                const activeIds = finalData.map(d => d.id);
+
+                if (finalData.length === 0) {
+                    updateOrCreate('empty-msg', { titulo: "", msg: "Todo en orden. No hay avisos.", cat: 'Empty', fecha: "", hora: "" }, true, 0);
                     activeIds.push('empty-msg');
                 }
 
+                // Renderizamos en el orden de la lista finalData
+                const stack = document.getElementById('notification-stack');
+                finalData.forEach((d, i) => {
+                    updateOrCreate(d.id, d, false, i);
+                    const el = document.getElementById(d.id);
+                    if(el) el.style.order = i; // Reforzamos el orden visual con CSS flex order
+                });
+
+                // Limpieza de antiguos
                 document.querySelectorAll('.notif-card').forEach(n => {
                     if (!activeIds.includes(n.id)) {
                         n.classList.remove('show');
@@ -186,7 +198,7 @@
             } catch (e) { console.error(e); }
         }
 
-        function updateOrCreate(id, data, isEmptyState, delayFactor) {
+        function updateOrCreate(id, data, isEmptyState, index) {
             const stack = document.getElementById('notification-stack');
             let el = document.getElementById(id);
             const tema = assets[data.cat] || assets['Aviso'];
@@ -194,7 +206,7 @@
             if (!el) {
                 el = document.createElement('div');
                 el.id = id; 
-                el.className = 'notif-card'; // Clase base
+                el.className = 'notif-card';
                 el.innerHTML = `
                     <div class="app-icon"></div>
                     <div class="content">
@@ -207,10 +219,13 @@
                     </div>
                 `;
                 stack.appendChild(el); 
-                setTimeout(() => el.classList.add('show'), 150 * delayFactor);
+                setTimeout(() => el.classList.add('show'), 150 * index);
             }
             
-            // Gestionar clases de animación/estado
+            // Actualizamos el orden visual siempre
+            el.style.order = index;
+
+            // Clases de glow
             el.classList.remove('empty-state', 'urgente-glow', 'active-glow');
             if (isEmptyState) {
                 el.classList.add('empty-state');
@@ -235,25 +250,16 @@
             msg.innerText = data.msg;
             msg.style.color = tema.text;
 
-            // Gestión de globos fecha/hora
             const bFecha = el.querySelector('.b-fecha');
             const bHora = el.querySelector('.b-hora');
             const timeCont = el.querySelector('.time-container');
 
             if (!isEmptyState && (data.fecha || data.hora)) {
                 timeCont.style.display = 'flex';
-                
-                if (data.fecha) {
-                    bFecha.innerText = data.fecha;
-                    bFecha.style.display = 'block';
-                    bFecha.style.color = tema.text;
-                } else { bFecha.style.display = 'none'; }
-
-                if (data.hora) {
-                    bHora.innerText = data.hora;
-                    bHora.style.display = 'block';
-                    bHora.style.color = tema.text;
-                } else { bHora.style.display = 'none'; }
+                if (data.fecha) { bFecha.innerText = data.fecha; bFecha.style.display = 'block'; bFecha.style.color = tema.text; }
+                else { bFecha.style.display = 'none'; }
+                if (data.hora) { bHora.innerText = data.hora; bHora.style.display = 'block'; bHora.style.color = tema.text; }
+                else { bHora.style.display = 'none'; }
             } else {
                 timeCont.style.display = 'none';
             }
