@@ -21,25 +21,20 @@
             gap: 15px;
         }
 
-        /* --- ZONA FIJA --- */
         #urgentes-fixed {
             display: flex; flex-direction: column; gap: 15px;
             flex-shrink: 0; z-index: 10;
-            /* Más padding lateral para evitar cortes de glow */
             padding: 10px 45px;
         }
 
-        /* --- ZONA SCROLL --- */
         #scroll-viewport {
             flex-grow: 1;
             position: relative;
             z-index: 1;
             overflow: hidden;
-            /* Aumentamos padding lateral a 45px para que el glow respire */
             padding: 0 45px; 
-            padding-top: 45px; 
-            margin-top: -45px; 
-            transition: -webkit-mask-image 0.5s ease;
+            padding-top: 40px; 
+            margin-top: -40px; 
         }
 
         .with-mask {
@@ -49,80 +44,64 @@
 
         #normales-stack {
             display: flex; flex-direction: column; gap: 15px;
-            /* Ajuste de ancho basado en el nuevo padding de 45px (90px total) */
             width: calc(100% - 90px);
             position: absolute;
-            top: 45px; 
+            top: 40px; 
             transition: top 1.2s ease-in-out;
-            padding-bottom: 50px;
+            padding-bottom: 60px; /* Aire extra al final del scroll */
         }
 
-        /* --- TARJETAS --- */
         .notif-card {
             position: relative;
             width: 100%; border-radius: 22px;
             display: flex; align-items: center; gap: 18px;
             padding: 18px 24px; box-sizing: border-box;
-            border: 1px solid rgba(255,255,255,1);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-            transform: translateX(115%); opacity: 0;
+            border: 1px solid rgba(255,255,255,0.8);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+            transform: translateX(110%); opacity: 0;
             transition: transform 0.6s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.6s ease;
         }
         .notif-card.show { transform: translateX(0); opacity: 1; }
 
         .notif-card::after {
-            content: ""; position: absolute; top: -1px; left: -1px; right: -1px; bottom: -1px;
-            border-radius: 23px; z-index: -1; pointer-events: none;
+            content: ""; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
+            border-radius: 24px; z-index: -1; pointer-events: none;
         }
 
-        /* --- GLOWS POTENCIADOS --- */
-        .urgente-glow::after { 
-            animation: pulseUrgenteVivo 2s infinite ease-in-out; 
-            opacity: 1; 
-        }
-
-        @keyframes pulseUrgenteVivo {
-            0%, 100% { 
-                box-shadow: 0 0 20px 8px rgba(255, 59, 48, 0.7), 0 0 35px 12px rgba(255, 59, 48, 0.4); 
-            }
-            50% { 
-                box-shadow: 0 0 35px 15px rgba(255, 59, 48, 1), 0 0 60px 25px rgba(255, 59, 48, 0.6); 
-            }
-        }
-
+        .urgente-glow::after { animation: pulseUrgente 2s infinite ease-in-out; opacity: 1; }
         .active-glow::after { 
-            box-shadow: 0 0 30px 12px var(--glow-color); 
+            box-shadow: 0 0 25px 8px var(--glow-color); 
             animation: glowFade 8s forwards; 
         }
 
+        @keyframes pulseUrgente {
+            0%, 100% { box-shadow: 0 0 20px 6px rgba(255, 59, 48, 0.6); }
+            50% { box-shadow: 0 0 35px 12px rgba(255, 59, 48, 0.9); }
+        }
         @keyframes glowFade { 0%, 100% { opacity: 0; } 10%, 90% { opacity: 1; } }
-
-        /* --- RESTO --- */
-        .new-indicator-dot {
-            position: absolute; top: 15px; right: 20px;
-            width: 12px; height: 12px; background-color: #007aff; border-radius: 50%;
-        }
-        .new-indicator-dot::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #007aff; border-radius: 50%; animation: sonar 2.5s infinite;
-        }
-        @keyframes sonar { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(3); opacity: 0; } }
 
         .app-icon {
             width: 58px; height: 58px; border-radius: 16px;
             display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
         .app-icon svg { width: 34px; height: 34px; fill: white; }
 
         .content { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
-        .title { font-weight: 800; font-size: 21px; color: #000; letter-spacing: -0.5px; }
-        .message { font-size: 18px; line-height: 1.25; font-weight: 700; color: #222; }
+        .title { font-weight: 800; font-size: 20px; color: #1a1a1a; letter-spacing: -0.5px; }
+        .message { font-size: 17px; line-height: 1.3; font-weight: 600; color: #444; }
         
+        /* AJUSTE BADGE FECHA */
         .date-badge {
-            font-size: 11px; font-weight: 900; padding: 6px 12px; border-radius: 12px;
-            background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(0,0,0,0.1);
+            font-size: 12px; font-weight: 900; padding: 6px 14px; border-radius: 12px;
+            background: rgba(255, 255, 255, 0.85); border: 1px solid rgba(0,0,0,0.08);
             text-transform: uppercase; white-space: nowrap;
+            letter-spacing: 0.5px;
+        }
+
+        .new-indicator-dot {
+            position: absolute; top: 15px; right: 20px;
+            width: 10px; height: 10px; background-color: #007aff; border-radius: 50%;
         }
     </style>
 </head>
@@ -139,15 +118,14 @@
         const SHEET_ID = '168DpGwqRcSsXtJoGPNqzJtHhtjjfFtrpcqLnnKq8CIY';
         let scrollDir = 1;
 
-        /* COLORES MÁS SATURADOS */
         const assets = {
-            'Urgente': { bg: '#fff0f0', icon: '#FF3B30', text: '#800000', svg: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>'},
-            'Aviso': { bg: '#eef7ff', icon: '#007AFF', text: '#001a4d', svg: '<svg viewBox="0 0 24 24"><path d="M12 22a2.98 2.98 0 0 1-2.9-2h5.8a2.98 2.98 0 0 1-2.9 2zm9-3V9c0-4.97-4.03-9-9-9S3 4.03 3 9v7l-2 2v1h22v-1l-2-2z"/></svg>'},
-            'Mantenimiento': { bg: '#fff9e6', icon: '#FF9500', text: '#664400', svg: '<svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.5 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>'},
-            'Seguridad': { bg: '#fff0f0', icon: '#FF3B30', text: '#800000', svg: '<svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12h-7V6.3l7-3.11v8.8z"/></svg>'},
-            'Visitas': { bg: '#f0fff4', icon: '#34C759', text: '#004d00', svg: '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'},
-            'Pentano': { bg: '#faf5ff', icon: '#AF52DE', text: '#4d004d', svg: '<svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-2 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>'},
-            'Empty': { bg: '#f2f9ff', icon: '#007297', text: '#007297', svg: '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>'}
+            'Urgente': { bg: 'rgb(255, 230, 230)', icon: '#FF3B30', text: '#600', svg: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>'},
+            'Aviso': { bg: 'rgb(220, 240, 255)', icon: '#007AFF', text: '#003', svg: '<svg viewBox="0 0 24 24"><path d="M12 22a2.98 2.98 0 0 1-2.9-2h5.8a2.98 2.98 0 0 1-2.9 2zm9-3V9c0-4.97-4.03-9-9-9S3 4.03 3 9v7l-2 2v1h22v-1l-2-2z"/></svg>'},
+            'Mantenimiento': { bg: 'rgb(255, 242, 210)', icon: '#FF9500', text: '#540', svg: '<svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.5 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>'},
+            'Seguridad': { bg: 'rgb(255, 230, 230)', icon: '#FF3B30', text: '#600', svg: '<svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12h-7V6.3l7-3.11v8.8z"/></svg>'},
+            'Visitas': { bg: 'rgb(225, 255, 225)', icon: '#34C759', text: '#030', svg: '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'},
+            'Pentano': { bg: 'rgb(248, 230, 255)', icon: '#AF52DE', text: '#303', svg: '<svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-2 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>'},
+            'Empty': { bg: 'rgb(230, 242, 255)', icon: '#007297', text: '#007297', svg: '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>'}
         };
 
         async function checkSheet() {
@@ -212,7 +190,7 @@
             if (data.cat === 'Urgente') el.classList.add('urgente-glow');
             else if (!isEmpty) { 
                 el.classList.add('active-glow'); 
-                el.style.setProperty('--glow-color', tema.icon + '70'); /* Subimos opacidad de glow a 70 */
+                el.style.setProperty('--glow-color', tema.icon + '60'); 
             }
             const icon = el.querySelector('.app-icon');
             icon.style.backgroundColor = tema.icon; icon.innerHTML = tema.svg;
@@ -220,33 +198,45 @@
             
             const msgEl = el.querySelector('.message');
             msgEl.innerText = data.msg;
-            if (isEmpty) {
-                msgEl.style.color = tema.text;
-            } else {
-                msgEl.style.color = "#222"; /* Texto un poco más oscuro para mejor contraste */
-            }
+            if (isEmpty) { msgEl.style.color = tema.text; msgEl.style.fontWeight = "700"; } 
+            else { msgEl.style.color = "#444"; msgEl.style.fontWeight = "600"; }
             
             const dot = el.querySelector('.new-indicator-dot');
             dot.style.display = (data.esNuevo && data.cat !== 'Urgente') ? 'block' : 'none';
+            
             const badge = el.querySelector('.date-badge');
-            if (data.fecha) { badge.style.display = 'block'; badge.innerText = `${data.fecha} ${data.hora || ''}`; badge.style.color = tema.text; }
+            if (data.fecha) { 
+                badge.style.display = 'block'; 
+                // CORRECCIÓN: Fecha y Hora separadas con |
+                badge.innerText = `${data.fecha}${data.hora ? ' | ' + data.hora : ''}`; 
+                badge.style.color = tema.text; 
+            }
             else badge.style.display = 'none';
         }
 
         function handleAutoScroll() {
             const viewport = document.getElementById('scroll-viewport');
             const stack = document.getElementById('normales-stack');
-            const scrollMax = stack.offsetHeight - (viewport.offsetHeight - 45);
+            
+            // CORRECCIÓN LÓGICA SCROLL: Recalculamos el espacio real disponible
+            const contentHeight = stack.getBoundingClientRect().height;
+            const viewportHeight = viewport.clientHeight;
+            const scrollMax = contentHeight - (viewportHeight - 40);
 
-            if (scrollMax > 0) {
+            if (contentHeight > (viewportHeight - 40)) {
                 viewport.classList.add('with-mask');
-                let currentTop = parseInt(stack.style.top) || 45;
-                if (currentTop <= -(scrollMax - 45)) scrollDir = -1;
-                if (currentTop >= 45) scrollDir = 1;
-                stack.style.top = (currentTop - (40 * scrollDir)) + "px";
+                let currentTop = parseInt(stack.style.top) || 40;
+                
+                if (currentTop <= -(scrollMax)) {
+                    scrollDir = -1;
+                } else if (currentTop >= 40) {
+                    scrollDir = 1;
+                }
+                
+                stack.style.top = (currentTop - (50 * scrollDir)) + "px";
             } else {
                 viewport.classList.remove('with-mask');
-                stack.style.top = "45px";
+                stack.style.top = "40px";
             }
         }
 
