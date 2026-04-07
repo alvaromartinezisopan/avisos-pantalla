@@ -4,45 +4,43 @@
     <meta charset="UTF-8">
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100vh; overflow: hidden; background: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        #main-container { padding: 60px 40px; box-sizing: border-box; }
-        #stack { display: flex; flex-direction: column; gap: 20px; width: 100%; }
+        #main-container { padding: 30px 40px; box-sizing: border-box; } /* Reducido padding superior */
+        #stack { display: flex; flex-direction: column; gap: 12px; width: 100%; } /* Menos separación entre tarjetas */
         
         .notif-card { 
-            position: relative; width: 100%; border-radius: 28px; 
-            display: flex; align-items: center; gap: 25px; 
-            padding: 25px 35px; box-sizing: border-box; 
+            position: relative; width: 100%; border-radius: 20px; /* Bordes más finos */
+            display: flex; align-items: center; gap: 18px; 
+            padding: 15px 25px; box-sizing: border-box; /* Padding reducido */
             background: white; border: 1px solid rgba(255,255,255,0.7); 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08); 
             transform: translateX(110%); opacity: 0; 
             transition: 0.8s cubic-bezier(0.2, 1, 0.3, 1); 
         }
         .notif-card.show { transform: translateX(0); opacity: 1; }
         
-        /* Estilo especial para Urgentes */
         .urgente-glow { 
             animation: pulse-ring 2s infinite; 
-            border: 2px solid rgba(255, 59, 48, 0.4) !important;
+            border: 1.5px solid rgba(255, 59, 48, 0.4) !important;
             z-index: 10; 
         }
         
         @keyframes pulse-ring { 
-            0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.5); } 
-            70% { box-shadow: 0 0 0 25px rgba(255, 59, 48, 0); } 
+            0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.4); } 
+            70% { box-shadow: 0 0 0 15px rgba(255, 59, 48, 0); } 
             100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); } 
         }
 
-        .app-icon { width: 65px; height: 65px; border-radius: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .app-icon svg { width: 38px; height: 38px; fill: white; }
+        .app-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .app-icon svg { width: 26px; height: 26px; fill: white; }
         
         .content { flex: 1; }
-        .title { font-weight: 800; font-size: 26px; color: #1c1c1e; margin-bottom: 4px; }
-        .message { font-size: 20px; color: #3a3a3c; font-weight: 500; line-height: 1.3; }
+        .title { font-weight: 800; font-size: 19px; color: #1c1c1e; margin-bottom: 2px; } /* Texto más pequeño */
+        .message { font-size: 16px; color: #3a3a3c; font-weight: 500; line-height: 1.2; } /* Texto más pequeño */
         
         .badge { 
-            font-size: 15px; font-weight: 900; padding: 10px 20px; 
-            border-radius: 14px; background: rgba(255,255,255,0.8); 
+            font-size: 12px; font-weight: 900; padding: 6px 14px; 
+            border-radius: 10px; background: rgba(255,255,255,0.8); 
             color: #1c1c1e; white-space: nowrap; text-transform: uppercase;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
     </style>
 </head>
@@ -71,46 +69,36 @@
                 const stack = document.getElementById('stack');
                 const hoy = new Date(); hoy.setHours(0,0,0,0);
 
-                // 1. Filtrar primero los avisos válidos
-                let avisosValidos = rows.filter(row => {
-                    const c = row.c;
-                    return c && c[5]?.v === "SI";
-                });
+                let avisosValidos = rows.filter(row => row.c && row.c[5]?.v === "SI");
 
-                // 2. ORDENAR: Poner "Urgente" primero
+                // Prioridad Urgente
                 avisosValidos.sort((a, b) => {
                     const catA = a.c[2]?.v === "Urgente" ? 0 : 1;
                     const catB = b.c[2]?.v === "Urgente" ? 0 : 1;
                     return catA - catB;
                 });
 
-                // 3. Generar el HTML
                 let html = "";
                 avisosValidos.forEach((row) => {
                     const c = row.c;
-                    
-                    // Procesar Fecha
                     let fTxt = ""; 
                     if (c[3]?.v) { 
                         const d = eval("new " + c[3].v); 
                         const fA = new Date(d.getFullYear(), d.getMonth(), d.getDate()); 
-                        if (fA < hoy) return; // No mostrar pasados
+                        if (fA < hoy) return; 
                         fTxt = (fA.getTime() === hoy.getTime()) ? "HOY" : c[3].f; 
                     }
                     
-                    // Procesar Hora (Limpieza de 1899)
                     let hTxt = c[4]?.f || ""; 
                     if (hTxt.includes("1899")) hTxt = "";
                     if (hTxt.length > 8) hTxt = hTxt.split(" ")[1]?.substring(0,5) || hTxt.substring(0,5);
 
                     const cat = c[2]?.v || "Aviso"; 
                     const tema = assets[cat] || assets['Aviso'];
-                    const esUrgente = cat === "Urgente";
-
                     const badge = (fTxt || hTxt) ? `<div class="badge">${fTxt}${fTxt && hTxt ? ' | ' : ''}${hTxt}</div>` : '';
                     
                     html += `
-                        <div class="notif-card show ${esUrgente ? 'urgente-glow' : ''}" style="background: ${tema.bg}">
+                        <div class="notif-card show ${cat === 'Urgente' ? 'urgente-glow' : ''}" style="background: ${tema.bg}">
                             <div class="app-icon" style="background: ${tema.color}">${tema.svg}</div>
                             <div class="content">
                                 <div class="title">${c[0]?.v}</div>
@@ -119,14 +107,10 @@
                             ${badge}
                         </div>`;
                 });
-                
                 stack.innerHTML = html;
-            } catch (e) {
-                console.error("Error en pantalla:", e);
-            }
+            } catch (e) { console.error(e); }
         }
 
-        // Refrescar cada 5 segundos
         setInterval(updateData, 5000); 
         updateData();
     </script>
