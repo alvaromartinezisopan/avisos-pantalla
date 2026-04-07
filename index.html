@@ -21,9 +21,7 @@
             transition: padding-top 0.6s cubic-bezier(0.2, 1, 0.3, 1);
         }
 
-        .has-urgent {
-            padding-top: 80px !important; 
-        }
+        .has-urgent { padding-top: 80px !important; }
 
         #notification-stack {
             display: flex;
@@ -41,7 +39,6 @@
             box-sizing: border-box;
             border: 1px solid rgba(255,255,255,0.7);
             box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-            
             transform: translateX(110%); opacity: 0;
             transition: transform 0.8s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.8s ease;
         }
@@ -120,30 +117,29 @@
                 
                 let allNotifs = [];
                 const hoy = new Date(); hoy.setHours(0,0,0,0);
-                
-                // Calculamos Mañana
-                const manana = new Date(hoy);
-                manana.setDate(manana.getDate() + 1);
+                const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
 
                 rows.forEach((row, index) => {
                     const c = row.c;
                     if (!c || (c[5]?.v || "").toString().toUpperCase() !== "SI") return;
                     
-                    let fechaAviso = null;
-                    if (c[3]?.v) {
-                        const d = eval("new " + c[3].v);
-                        fechaAviso = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-                    }
-                    
-                    if (fechaAviso && fechaAviso < hoy) return;
-                    
                     let etiquetaFecha = c[3]?.f || "";
-                    let esHoy = (fechaAviso && fechaAviso.getTime() === hoy.getTime());
-                    let esManana = (fechaAviso && fechaAviso.getTime() === manana.getTime());
-                    
-                    if (esHoy) etiquetaFecha = "HOY";
-                    else if (esManana) etiquetaFecha = "MAÑANA";
-                    
+                    let fechaObjeto = null;
+                    let timestamp = 9999999999999; // Para las que no tienen fecha, mandarlas al final
+
+                    if (c[3]?.v) {
+                        fechaObjeto = eval("new " + c[3].v);
+                        fechaObjeto.setHours(0,0,0,0);
+                        timestamp = fechaObjeto.getTime();
+                    }
+
+                    if (fechaObjeto && fechaObjeto < hoy) return; 
+
+                    if (fechaObjeto) {
+                        if (fechaObjeto.getTime() === hoy.getTime()) etiquetaFecha = "HOY";
+                        else if (fechaObjeto.getTime() === manana.getTime()) etiquetaFecha = "MAÑANA";
+                    }
+
                     let catTexto = (c[2]?.v || "").toString();
                     let categoria = catTexto.includes("Urgen") ? "Urgente" : (catTexto.includes("Mante") ? "Mantenimiento" : (catTexto.includes("Visita") ? "Visitas" : (catTexto.includes("Seguri") ? "Seguridad" : (catTexto.includes("Penta") ? "Pentano" : "Aviso"))));
                     
@@ -154,18 +150,21 @@
                         cat: categoria, 
                         fecha: etiquetaFecha, 
                         hora: c[4]?.f || "", 
-                        esNuevo: esHoy 
+                        esNuevo: (etiquetaFecha === "HOY"),
+                        ts: timestamp // Guardamos el tiempo para ordenar
                     });
                 });
 
-                allNotifs.sort((a, b) => (a.cat === 'Urgente' ? -1 : 1));
+                // ORDENACIÓN: 1º Urgentes, 2º Por fecha más cercana (ts)
+                allNotifs.sort((a, b) => {
+                    if (a.cat === 'Urgente' && b.cat !== 'Urgente') return -1;
+                    if (a.cat !== 'Urgente' && b.cat === 'Urgente') return 1;
+                    return a.ts - b.ts; // Orden cronológico ascendente
+                });
 
                 const container = document.getElementById('main-container');
-                if (allNotifs.length > 0 && allNotifs[0].cat === 'Urgente') {
-                    container.classList.add('has-urgent');
-                } else {
-                    container.classList.remove('has-urgent');
-                }
+                if (allNotifs.length > 0 && allNotifs[0].cat === 'Urgente') container.classList.add('has-urgent');
+                else container.classList.remove('has-urgent');
 
                 const stack = document.getElementById('notification-stack');
                 if (allNotifs.length === 0) {
@@ -191,7 +190,7 @@
                 container.appendChild(el);
                 setTimeout(() => el.classList.add('show'), 120 * index);
             }
-            el.style.order = index;
+            el.style.order = index; // Importante para mantener el orden visual
             el.style.backgroundColor = tema.bg;
             el.classList.remove('urgente-glow', 'active-glow');
             if (data.cat === 'Urgente') el.classList.add('urgente-glow');
@@ -203,9 +202,7 @@
             icon.style.backgroundColor = tema.icon; icon.innerHTML = tema.svg;
             el.querySelector('.title').innerText = data.titulo; el.querySelector('.title').style.color = tema.text;
             el.querySelector('.message').innerText = data.msg;
-            
-            const dot = el.querySelector('.new-indicator-dot');
-            dot.style.display = (data.esNuevo && data.cat !== 'Urgente') ? 'block' : 'none';
+            el.querySelector('.new-indicator-dot').style.display = (data.esNuevo && data.cat !== 'Urgente') ? 'block' : 'none';
             
             const badge = el.querySelector('.date-badge');
             if (data.fecha) { 
