@@ -3,103 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        body, html { 
-            margin: 0; padding: 0; 
-            width: 100%; height: 100vh; 
-            overflow: hidden; 
-            background: transparent !important; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-        }
-
-        #main-container { 
-            padding: 60px 40px; 
-            box-sizing: border-box; 
-        }
-
-        #stack { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 20px; 
-            width: 100%;
-        }
-
-        /* La Tarjeta de Notificación */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100vh; overflow: hidden; background: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        #main-container { padding: 60px 40px; box-sizing: border-box; }
+        #stack { display: flex; flex-direction: column; gap: 20px; width: 100%; }
+        
         .notif-card { 
-            position: relative; 
-            width: 100%; 
-            border-radius: 24px; 
-            display: flex; 
-            align-items: center; 
-            gap: 20px; 
-            padding: 20px 30px; 
-            box-sizing: border-box; 
-            background: white;
-            border: 1px solid rgba(255,255,255,0.7);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
-            transform: translateX(110%); 
-            opacity: 0; 
+            position: relative; width: 100%; border-radius: 28px; 
+            display: flex; align-items: center; gap: 25px; 
+            padding: 25px 35px; box-sizing: border-box; 
+            background: white; border: 1px solid rgba(255,255,255,0.7); 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
+            transform: translateX(110%); opacity: 0; 
             transition: 0.8s cubic-bezier(0.2, 1, 0.3, 1); 
         }
-
-        .notif-card.show { 
-            transform: translateX(0); 
-            opacity: 1; 
-        }
-
-        /* EFECTO DE PARPADEO (IGUAL AL ADMIN) */
+        .notif-card.show { transform: translateX(0); opacity: 1; }
+        
+        /* Estilo especial para Urgentes */
         .urgente-glow { 
             animation: pulse-ring 2s infinite; 
-            border: 1px solid rgba(255, 59, 48, 0.3) !important;
+            border: 2px solid rgba(255, 59, 48, 0.4) !important;
+            z-index: 10; 
+        }
+        
+        @keyframes pulse-ring { 
+            0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.5); } 
+            70% { box-shadow: 0 0 0 25px rgba(255, 59, 48, 0); } 
+            100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); } 
         }
 
-        @keyframes pulse-ring {
-            0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.5); }
-            70% { box-shadow: 0 0 0 20px rgba(255, 59, 48, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
-        }
-
-        /* Iconos y Contenido */
-        .app-icon { 
-            width: 55px; height: 55px; 
-            border-radius: 15px; 
-            display: flex; align-items: center; justify-content: center; 
-            flex-shrink: 0; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        .app-icon svg { width: 32px; height: 32px; fill: white; }
-
-        .content { flex: 1; min-width: 0; }
-        .title { font-weight: 800; font-size: 22px; color: #1a1a1a; margin-bottom: 2px; }
-        .message { font-size: 17px; color: #444; font-weight: 500; }
-
-        /* Badge de Fecha/Hora */
+        .app-icon { width: 65px; height: 65px; border-radius: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .app-icon svg { width: 38px; height: 38px; fill: white; }
+        
+        .content { flex: 1; }
+        .title { font-weight: 800; font-size: 26px; color: #1c1c1e; margin-bottom: 4px; }
+        .message { font-size: 20px; color: #3a3a3c; font-weight: 500; line-height: 1.3; }
+        
         .badge { 
-            font-size: 13px; 
-            font-weight: 900; 
-            padding: 8px 15px; 
-            border-radius: 12px; 
-            background: rgba(255,255,255,0.7); 
-            color: #1a1a1a;
-            white-space: nowrap;
-            border: 1px solid rgba(0,0,0,0.05);
-            text-transform: uppercase;
+            font-size: 15px; font-weight: 900; padding: 10px 20px; 
+            border-radius: 14px; background: rgba(255,255,255,0.8); 
+            color: #1c1c1e; white-space: nowrap; text-transform: uppercase;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
     </style>
 </head>
 <body>
-
-    <div id="main-container">
-        <div id="stack"></div>
-    </div>
+    <div id="main-container"><div id="stack"></div></div>
 
     <script>
         const SHEET_ID = '168DpGwqRcSsXtJoGPNqzJtHhtjjfFtrpcqLnnKq8CIY';
-
+        
         const assets = {
             'Urgente': { color: '#FF3B30', bg: '#ffe6e6', svg: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>'},
             'Aviso': { color: '#007AFF', bg: '#e1f0ff', svg: '<svg viewBox="0 0 24 24"><path d="M12 22a2.98 2.98 0 0 1-2.9-2h5.8a2.98 2.98 0 0 1-2.9 2zm9-3V9c0-4.97-4.03-9-9-9S3 4.03 3 9v7l-2 2v1h22v-1l-2-2z"/></svg>'},
             'Mantenimiento': { color: '#FF9500', bg: '#fff5d2', svg: '<svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.5 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>'},
-            'Seguridad': { color: '#FF3B30', bg: '#ffe6e6', svg: '<svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12h-7V6.3l7-3.11v8.8z"/></svg>'},
+            'Seguridad': { color: '#5856D6', bg: '#f2f2ff', svg: '<svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12h-7V6.3l7-3.11v8.8z"/></svg>'},
             'Visitas': { color: '#34C759', bg: '#e6fae6', svg: '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'},
             'Pentano': { color: '#AF52DE', bg: '#faebff', svg: '<svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg>'}
         };
@@ -107,68 +64,70 @@
         async function updateData() {
             try {
                 const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&refresh=${Date.now()}`;
-                const response = await fetch(url);
-                const text = await response.text();
+                const res = await fetch(url); 
+                const text = await res.text();
                 const json = JSON.parse(text.substr(47).slice(0, -2));
                 const rows = json.table.rows;
-                
                 const stack = document.getElementById('stack');
                 const hoy = new Date(); hoy.setHours(0,0,0,0);
-                
-                let htmlContent = "";
 
-                rows.forEach((row) => {
+                // 1. Filtrar primero los avisos válidos
+                let avisosValidos = rows.filter(row => {
                     const c = row.c;
-                    // Solo procesar si la columna F es "SI"
-                    if (!c || c[5]?.v !== "SI") return;
+                    return c && c[5]?.v === "SI";
+                });
 
+                // 2. ORDENAR: Poner "Urgente" primero
+                avisosValidos.sort((a, b) => {
+                    const catA = a.c[2]?.v === "Urgente" ? 0 : 1;
+                    const catB = b.c[2]?.v === "Urgente" ? 0 : 1;
+                    return catA - catB;
+                });
+
+                // 3. Generar el HTML
+                let html = "";
+                avisosValidos.forEach((row) => {
+                    const c = row.c;
+                    
                     // Procesar Fecha
-                    let fechaTexto = "";
-                    if (c[3]?.v) {
-                        const d = eval("new " + c[3].v);
-                        const fechaAviso = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-                        if (fechaAviso < hoy) return; // No mostrar antiguos
-                        fechaTexto = (fechaAviso.getTime() === hoy.getTime()) ? "HOY" : c[3].f;
+                    let fTxt = ""; 
+                    if (c[3]?.v) { 
+                        const d = eval("new " + c[3].v); 
+                        const fA = new Date(d.getFullYear(), d.getMonth(), d.getDate()); 
+                        if (fA < hoy) return; // No mostrar pasados
+                        fTxt = (fA.getTime() === hoy.getTime()) ? "HOY" : c[3].f; 
                     }
+                    
+                    // Procesar Hora (Limpieza de 1899)
+                    let hTxt = c[4]?.f || ""; 
+                    if (hTxt.includes("1899")) hTxt = "";
+                    if (hTxt.length > 8) hTxt = hTxt.split(" ")[1]?.substring(0,5) || hTxt.substring(0,5);
 
-                    // Procesar Hora (Limpieza de formato)
-                    let horaTexto = c[4]?.f || c[4]?.v || "";
-                    if (horaTexto.length > 8) {
-                        // Si llega como fecha larga, extraer solo HH:mm
-                        horaTexto = horaTexto.split(" ")[1]?.substring(0,5) || horaTexto.substring(0,5);
-                    }
+                    const cat = c[2]?.v || "Aviso"; 
+                    const tema = assets[cat] || assets['Aviso'];
+                    const esUrgente = cat === "Urgente";
 
-                    const categoria = c[2]?.v || "Aviso";
-                    const tema = assets[categoria] || assets['Aviso'];
-                    const esUrgente = categoria === 'Urgente';
-
-                    const badge = (fechaTexto || horaTexto) 
-                        ? `<div class="badge">${fechaTexto}${fechaTexto && horaTexto ? ' | ' : ''}${horaTexto}</div>` 
-                        : '';
-
-                    htmlContent += `
+                    const badge = (fTxt || hTxt) ? `<div class="badge">${fTxt}${fTxt && hTxt ? ' | ' : ''}${hTxt}</div>` : '';
+                    
+                    html += `
                         <div class="notif-card show ${esUrgente ? 'urgente-glow' : ''}" style="background: ${tema.bg}">
-                            <div class="app-icon" style="background: ${tema.color}">
-                                ${tema.svg}
-                            </div>
+                            <div class="app-icon" style="background: ${tema.color}">${tema.svg}</div>
                             <div class="content">
                                 <div class="title">${c[0]?.v}</div>
                                 <div class="message">${c[1]?.v || ''}</div>
                             </div>
                             ${badge}
-                        </div>
-                    `;
+                        </div>`;
                 });
-
-                stack.innerHTML = htmlContent;
-
+                
+                stack.innerHTML = html;
             } catch (e) {
-                console.error("Error cargando datos:", e);
+                console.error("Error en pantalla:", e);
             }
         }
 
-        // Actualizar cada 5 segundos
-        setInterval(updateData, 5000);
+        // Refrescar cada 5 segundos
+        setInterval(updateData, 5000); 
         updateData();
     </script>
 </body>
