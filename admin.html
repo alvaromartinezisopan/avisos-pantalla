@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Control - Avisos</title>
+    <style>
+        :root { --accent: #007aff; --bg: #f4f7f9; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        .dashboard { display: grid; grid-template-columns: 420px 1fr; width: 100%; }
+        
+        /* FORMULARIO */
+        .form-section { background: white; padding: 25px; box-shadow: 5px 0 15px rgba(0,0,0,0.05); overflow-y: auto; z-index: 10; }
+        h2 { margin-top: 0; font-size: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        label { display: block; margin: 15px 0 5px; font-weight: bold; font-size: 11px; color: #666; text-transform: uppercase; }
+        input, select, textarea { width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 10px; box-sizing: border-box; font-size: 15px; }
+        
+        button { width: 100%; padding: 15px; background: #1a1a1a; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        button:hover { background: #333; }
+
+        /* LISTA DE ACTIVOS */
+        .lista-container { margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }
+        .item-activo { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 10px; border-radius: 10px; margin-bottom: 8px; border-left: 5px solid #ccc; }
+        .btn-del { width: auto; background: #ff3b30; padding: 6px 12px; font-size: 10px; margin: 0; }
+
+        /* VISTA PREVIA */
+        .preview-section { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #e9ecef; }
+        .notif-card { 
+            width: 90%; max-width: 480px; border-radius: 22px; display: flex; align-items: center; gap: 15px; padding: 18px 25px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08); background: white;
+            transform: translateX(110%); opacity: 0; transition: 0.6s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+        .notif-card.show { transform: translateX(0); opacity: 1; }
+        
+        /* EFECTO PARPADEO PARA URGENTE */
+        .urgente-glow { animation: pulseUrgente 2s infinite ease-in-out; }
+        @keyframes pulseUrgente {
+            0%, 100% { box-shadow: 0 0 15px rgba(255, 59, 48, 0.4); }
+            50% { box-shadow: 0 0 35px rgba(255, 59, 48, 0.7); }
+        }
+
+        .app-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .app-icon svg { width: 28px; height: 28px; fill: white; }
+        .title { font-weight: 800; font-size: 18px; }
+        .badge { font-size: 11px; font-weight: 900; padding: 5px 10px; border-radius: 8px; background: rgba(255,255,255,0.5); text-transform: uppercase; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <div class="form-section">
+        <h2>Nuevo Aviso</h2>
+        <form id="notif-form">
+            <label>Título del Aviso *</label>
+            <input type="text" id="in-titulo" required maxlength="45">
+            
+            <label>Mensaje</label>
+            <textarea id="in-mensaje" rows="2" maxlength="130"></textarea>
+            
+            <label>Categoría</label>
+            <select id="in-categoria">
+                <option value="Aviso">Aviso</option>
+                <option value="Urgente">Urgente</option>
+                <option value="Mantenimiento">Mantenimiento</option>
+                <option value="Seguridad">Seguridad</option>
+                <option value="Visitas">Visitas</option>
+            </select>
+
+            <div style="display: flex; gap: 10px;">
+                <div style="flex:1"><label>Fecha</label><input type="date" id="in-fecha"></div>
+                <div style="flex:1"><label>Hora</label><input type="time" id="in-hora"></div>
+            </div>
+
+            <button type="submit" id="btn-enviar">PUBLICAR EN PANTALLA</button>
+        </form>
+
+        <div class="lista-container">
+            <label>Avisos Activos</label>
+            <div id="lista-activos">Cargando...</div>
+        </div>
+    </div>
+
+    <div class="preview-section">
+        <div id="pv-card" class="notif-card">
+            <div id="pv-icon" class="app-icon"></div>
+            <div style="flex:1">
+                <div id="pv-titulo" class="title"></div>
+                <div id="pv-mensaje" style="font-size:15px; color:#444"></div>
+            </div>
+            <div id="pv-badge" class="badge"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxZ8WhMYqVFJVbCu0fAEHwsWFVKN0WY7LITAAsNoo7QVnTKdndM3-6Nffj6GPFpMaaP/exec';
+
+    const assets = {
+        'Urgente': { color: '#FF3B30', bg: '#ffe6e6', svg: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>'},
+        'Aviso': { color: '#007AFF', bg: '#e1f0ff', svg: '<svg viewBox="0 0 24 24"><path d="M12 22a2.98 2.98 0 0 1-2.9-2h5.8a2.98 2.98 0 0 1-2.9 2zm9-3V9c0-4.97-4.03-9-9-9S3 4.03 3 9v7l-2 2v1h22v-1l-2-2z"/></svg>'},
+        'Mantenimiento': { color: '#FF9500', bg: '#fff5d2', svg: '<svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.5 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>'},
+        'Seguridad': { color: '#FF3B30', bg: '#ffe6e6', svg: '<svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12h-7V6.3l7-3.11v8.8z"/></svg>'},
+        'Visitas': { color: '#34C759', bg: '#e6fae6', svg: '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'}
+    };
+
+    function updatePreview() {
+        const titulo = document.getElementById('in-titulo').value;
+        const msg = document.getElementById('in-mensaje').value;
+        const cat = document.getElementById('in-categoria').value;
+        const card = document.getElementById('pv-card');
+        
+        if(titulo) card.classList.add('show'); else card.classList.remove('show');
+        
+        const tema = assets[cat];
+        card.style.backgroundColor = tema.bg;
+        document.getElementById('pv-icon').style.backgroundColor = tema.color;
+        document.getElementById('pv-icon').innerHTML = tema.svg;
+        document.getElementById('pv-titulo').innerText = titulo;
+        document.getElementById('pv-mensaje').innerText = msg;
+
+        // Efecto parpadeo solo para urgente
+        if(cat === 'Urgente') card.classList.add('urgente-glow');
+        else card.classList.remove('urgente-glow');
+
+        // FECHA
+        const fRaw = document.getElementById('in-fecha').value;
+        const h = document.getElementById('in-hora').value;
+        let txtF = "";
+
+        if(fRaw) {
+            const hoy = new Date();
+            hoy.setHours(0,0,0,0);
+            const sel = new Date(fRaw.replace(/-/g, '\/'));
+            sel.setHours(0,0,0,0);
+            
+            const diff = Math.round((sel - hoy) / 86400000);
+            if(diff === 0) txtF = "HOY";
+            else if(diff === 1) txtF = "MAÑANA";
+            else txtF = fRaw.split('-').reverse().join('/');
+        }
+        
+        const badge = document.getElementById('pv-badge');
+        badge.innerText = (txtF && h) ? txtF + " | " + h : txtF + h;
+        badge.style.display = (txtF || h) ? 'block' : 'none';
+    }
+
+    async function cargarActivos() {
+        const contenedor = document.getElementById('lista-activos');
+        try {
+            const res = await fetch(WEB_APP_URL);
+            const data = await res.json();
+            contenedor.innerHTML = data.length ? '' : '<small>No hay avisos.</small>';
+            data.forEach(item => {
+                const tema = assets[item.categoria] || {color: '#ccc'};
+                const div = document.createElement('div');
+                div.className = 'item-activo';
+                div.style.borderLeftColor = tema.color;
+                div.innerHTML = `
+                    <div><b>${item.titulo}</b><br><small>${item.categoria}</small></div>
+                    <button class="btn-del" onclick="eliminar(${item.fila})">QUITAR</button>
+                `;
+                contenedor.appendChild(div);
+            });
+        } catch (e) { contenedor.innerHTML = "Error de carga."; }
+    }
+
+    async function eliminar(fila) {
+        if(!confirm("¿Quitar de la pantalla?")) return;
+        await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "delete", fila: fila}) });
+        setTimeout(cargarActivos, 800);
+    }
+
+    document.getElementById('notif-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btn-enviar');
+        btn.disabled = true; btn.innerText = "PUBLICANDO...";
+        
+        const payload = {
+            titulo: document.getElementById('in-titulo').value,
+            mensaje: document.getElementById('in-mensaje').value,
+            categoria: document.getElementById('in-categoria').value,
+            fecha: document.getElementById('in-fecha').value,
+            hora: document.getElementById('in-hora').value
+        };
+
+        await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+        document.getElementById('notif-form').reset();
+        updatePreview();
+        btn.disabled = false; btn.innerText = "PUBLICAR EN PANTALLA";
+        setTimeout(cargarActivos, 1000);
+    });
+
+    ['in-titulo', 'in-mensaje', 'in-categoria', 'in-fecha', 'in-hora'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updatePreview);
+    });
+
+    cargarActivos();
+</script>
+</body>
+</html>
