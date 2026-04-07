@@ -3,166 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100vh; overflow: hidden; background: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        #main-container { padding: 30px 40px; box-sizing: border-box; }
-        #stack { display: flex; flex-direction: column; gap: 12px; width: 100%; }
-        
-        .notif-card { 
-            position: relative; width: 100%; border-radius: 20px; 
-            display: flex; align-items: center; gap: 18px; 
-            padding: 15px 25px; box-sizing: border-box; 
-            background: white; border: 1px solid rgba(255,255,255,0.7); 
-            box-shadow: 0 8px 25px rgba(0,0,0,0.08); 
-            transition: all 0.5s ease;
-            overflow: visible;
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100vh;
+            overflow: hidden;
+            background-color: transparent !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Animación solo cuando se añade la clase .new-entry */
-        .new-entry {
-            animation: slideIn 0.8s cubic-bezier(0.2, 1, 0.3, 1) forwards, 
-                       entryGlow 2s ease-out;
+        #main-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            /* AJUSTE: Mucho más margen arriba (50px) y laterales (35px) */
+            padding: 50px 35px 20px 35px; 
+            box-sizing: border-box;
+            transition: padding-top 0.6s cubic-bezier(0.2, 1, 0.3, 1);
         }
 
-        @keyframes slideIn {
-            0% { transform: translateX(110%); opacity: 0; }
-            100% { transform: translateX(0); opacity: 1; }
+        /* AJUSTE: Cuando hay urgentes, baja hasta 80px */
+        .has-urgent {
+            padding-top: 80px !important; 
         }
 
-        /* Efecto Glow del color de la tarjeta al entrar */
-        @keyframes entryGlow {
-            0% { box-shadow: 0 0 0px 0px var(--glow-color); }
-            30% { box-shadow: 0 0 30px 10px var(--glow-color); }
-            100% { box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
-        }
-        
-        /* Glow persistente SOLO para Urgentes */
-        .urgente-glow { 
-            animation: pulse-ring 2s infinite; 
-            border: 1.5px solid rgba(255, 59, 48, 0.4) !important;
-        }
-        
-        @keyframes pulse-ring { 
-            0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.4); } 
-            70% { box-shadow: 0 0 0 15px rgba(255, 59, 48, 0); } 
-            100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); } 
+        #notification-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 14px; 
+            width: 100%;
         }
 
-        .app-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .app-icon svg { width: 26px; height: 26px; fill: white; }
+        .notif-card {
+            position: relative;
+            width: 100%; 
+            border-radius: 20px;
+            display: flex; align-items: center; gap: 18px;
+            /* AJUSTE: Tarjetas robustas y cómodas */
+            padding: 16px 24px; 
+            box-sizing: border-box;
+            border: 1px solid rgba(255,255,255,0.7);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            
+            transform: translateX(110%); opacity: 0;
+            transition: transform 0.8s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.8s ease;
+        }
+        .notif-card.show { transform: translateX(0); opacity: 1; }
+
+        .notif-card::after {
+            content: ""; position: absolute; top: -1px; left: -1px; right: -1px; bottom: -1px;
+            border-radius: 21px; z-index: -1; pointer-events: none;
+        }
+
+        /* GLOWS (Ahora con más espacio para brillar) */
+        .urgente-glow::after { 
+            animation: pulseUrgente 2.2s infinite ease-in-out; 
+            opacity: 1; 
+        }
+        .active-glow::after { 
+            box-shadow: 0 0 20px 8px var(--glow-color); 
+            animation: glowFade 8s forwards; 
+        }
+
+        @keyframes pulseUrgente {
+            0%, 100% { box-shadow: 0 0 18px 5px rgba(255, 59, 48, 0.4); }
+            50% { box-shadow: 0 0 35px 12px rgba(255, 59, 48, 0.6); }
+        }
+        @keyframes glowFade { 0%, 100% { opacity: 0; } 10%, 90% { opacity: 1; } }
+
+        .app-icon {
+            width: 48px; height: 48px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .app-icon svg { width: 28px; height: 28px; fill: white; }
+
+        .content { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+        .title { font-weight: 800; font-size: 18px; color: #1a1a1a; letter-spacing: -0.5px; }
+        .message { font-size: 15px; line-height: 1.3; font-weight: 600; color: #333; }
         
-        .content { flex: 1; }
-        .title { font-weight: 800; font-size: 19px; color: #1c1c1e; margin-bottom: 2px; }
-        .message { font-size: 16px; color: #3a3a3c; font-weight: 500; line-height: 1.2; }
-        
-        .badge { 
-            font-size: 12px; font-weight: 900; padding: 6px 14px; 
-            border-radius: 10px; background: rgba(255,255,255,0.8); 
-            color: #1c1c1e; white-space: nowrap; text-transform: uppercase;
+        .date-badge {
+            font-size: 11px; font-weight: 900; padding: 6px 12px; border-radius: 10px;
+            background: rgba(255, 255, 255, 0.6); border: 1px solid rgba(0,0,0,0.06);
+            text-transform: uppercase; white-space: nowrap;
+        }
+
+        .new-indicator-dot {
+            position: absolute; top: 12px; right: 18px;
+            width: 9px; height: 9px; background-color: #007aff; border-radius: 50%;
         }
     </style>
 </head>
 <body>
-    <div id="main-container"><div id="stack"></div></div>
+
+    <div id="main-container">
+        <div id="notification-stack"></div>
+    </div>
 
     <script>
         const SHEET_ID = '168DpGwqRcSsXtJoGPNqzJtHhtjjfFtrpcqLnnKq8CIY';
-        let avisosActuales = []; // Memoria para no repetir animaciones
-        
+
         const assets = {
-            'Urgente': { color: '#FF3B30', bg: '#ffe6e6', svg: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>'},
-            'Aviso': { color: '#007AFF', bg: '#e1f0ff', svg: '<svg viewBox="0 0 24 24"><path d="M12 22a2.98 2.98 0 0 1-2.9-2h5.8a2.98 2.98 0 0 1-2.9 2zm9-3V9c0-4.97-4.03-9-9-9S3 4.03 3 9v7l-2 2v1h22v-1l-2-2z"/></svg>'},
-            'Mantenimiento': { color: '#FF9500', bg: '#fff5d2', svg: '<svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.5 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>'},
-            'Seguridad': { color: '#5856D6', bg: '#f2f2ff', svg: '<svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12h-7V6.3l7-3.11v8.8z"/></svg>'},
-            'Visitas': { color: '#34C759', bg: '#e6fae6', svg: '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'},
-            'Pentano': { color: '#AF52DE', bg: '#faebff', svg: '<svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg>'}
+            'Urgente': { bg: 'rgb(255, 230, 230)', icon: '#FF3B30', text: '#600', svg: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>'},
+            'Aviso': { bg: 'rgb(225, 240, 255)', icon: '#007AFF', text: '#003', svg: '<svg viewBox="0 0 24 24"><path d="M12 22a2.98 2.98 0 0 1-2.9-2h5.8a2.98 2.98 0 0 1-2.9 2zm9-3V9c0-4.97-4.03-9-9-9S3 4.03 3 9v7l-2 2v1h22v-1l-2-2z"/></svg>'},
+            'Mantenimiento': { bg: 'rgb(255, 245, 210)', icon: '#FF9500', text: '#540', svg: '<svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.5 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>'},
+            'Seguridad': { bg: 'rgb(255, 230, 230)', icon: '#FF3B30', text: '#600', svg: '<svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12h-7V6.3l7-3.11v8.8z"/></svg>'},
+            'Visitas': { bg: 'rgb(230, 250, 230)', icon: '#34C759', text: '#030', svg: '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'},
+            'Pentano': { bg: 'rgb(250, 235, 255)', icon: '#AF52DE', text: '#303', svg: '<svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-2 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>'},
+            'Empty': { bg: 'rgb(235, 245, 255)', icon: '#007297', text: '#007297', svg: '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>'}
         };
 
-        async function updateData() {
+        async function checkSheet() {
             try {
                 const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&refresh=${Date.now()}`;
-                const res = await fetch(url); 
-                const text = await res.text();
+                const response = await fetch(url);
+                const text = await response.text();
                 const json = JSON.parse(text.substr(47).slice(0, -2));
                 const rows = json.table.rows;
-                const stack = document.getElementById('stack');
+                
+                let allNotifs = [];
                 const hoy = new Date(); hoy.setHours(0,0,0,0);
 
-                let nuevosAvisosRaw = rows.filter(row => row.c && row.c[5]?.v === "SI");
-
-                // Prioridad Urgente arriba
-                nuevosAvisosRaw.sort((a, b) => {
-                    const catA = a.c[2]?.v === "Urgente" ? 0 : 1;
-                    const catB = b.c[2]?.v === "Urgente" ? 0 : 1;
-                    return catA - catB;
-                });
-
-                // Crear identificador único para cada aviso basándonos en título + mensaje + categoría
-                const idActuales = nuevosAvisosRaw.map(r => r.c[0].v + r.c[1].v + r.c[2].v);
-
-                // 1. Eliminar de la pantalla lo que ya no está en el Excel
-                const cardsEnPantalla = stack.querySelectorAll('.notif-card');
-                cardsEnPantalla.forEach(card => {
-                    if (!idActuales.includes(card.dataset.id)) {
-                        card.style.transform = "translateX(110%)";
-                        card.style.opacity = "0";
-                        setTimeout(() => card.remove(), 800);
-                    }
-                });
-
-                // 2. Añadir solo los que son REALMENTE nuevos
-                nuevosAvisosRaw.forEach((row, index) => {
+                rows.forEach((row, index) => {
                     const c = row.c;
-                    const id = c[0].v + c[1].v + c[2].v;
-                    
-                    // Si ya existe en pantalla, no hacemos nada
-                    if (stack.querySelector(`[data-id="${CSS.escape(id)}"]`)) return;
-
-                    let fTxt = ""; 
-                    if (c[3]?.v) { 
-                        const d = eval("new " + c[3].v); 
-                        const fA = new Date(d.getFullYear(), d.getMonth(), d.getDate()); 
-                        if (fA < hoy) return; 
-                        fTxt = (fA.getTime() === hoy.getTime()) ? "HOY" : c[3].f; 
+                    if (!c || (c[5]?.v || "").toString().toUpperCase() !== "SI") return;
+                    let fechaAviso = null;
+                    if (c[3]?.v) {
+                        const d = eval("new " + c[3].v);
+                        fechaAviso = new Date(d.getFullYear(), d.getMonth(), d.getDate());
                     }
-                    
-                    let hTxt = c[4]?.f || ""; 
-                    if (hTxt.includes("1899")) hTxt = "";
-                    if (hTxt.length > 8) hTxt = hTxt.split(" ")[1]?.substring(0,5) || hTxt.substring(0,5);
+                    if (fechaAviso && fechaAviso < hoy) return;
+                    let etiquetaFecha = c[3]?.f || "", esHoy = (fechaAviso && fechaAviso.getTime() === hoy.getTime());
+                    if (esHoy) etiquetaFecha = "HOY";
+                    let catTexto = (c[2]?.v || "").toString();
+                    let categoria = catTexto.includes("Urgen") ? "Urgente" : (catTexto.includes("Mante") ? "Mantenimiento" : (catTexto.includes("Visita") ? "Visitas" : (catTexto.includes("Seguri") ? "Seguridad" : (catTexto.includes("Penta") ? "Pentano" : "Aviso"))));
+                    allNotifs.push({ id: `notif-${index}`, titulo: c[0]?.v || "Aviso", msg: c[1]?.v || "", cat: categoria, fecha: etiquetaFecha, hora: c[4]?.f || "", esNuevo: esHoy });
+                });
 
-                    const cat = c[2]?.v || "Aviso"; 
-                    const tema = assets[cat] || assets['Aviso'];
-                    const badge = (fTxt || hTxt) ? `<div class="badge">${fTxt}${fTxt && hTxt ? ' | ' : ''}${hTxt}</div>` : '';
-                    
-                    const div = document.createElement('div');
-                    div.dataset.id = id;
-                    div.className = `notif-card new-entry ${cat === 'Urgente' ? 'urgente-glow' : ''}`;
-                    div.style.background = tema.bg;
-                    div.style.setProperty('--glow-color', tema.color); // Color para la animación de entrada
-                    
-                    div.innerHTML = `
-                        <div class="app-icon" style="background: ${tema.color}">${tema.svg}</div>
-                        <div class="content">
-                            <div class="title">${c[0]?.v}</div>
-                            <div class="message">${c[1]?.v || ''}</div>
-                        </div>
-                        ${badge}`;
+                allNotifs.sort((a, b) => (a.cat === 'Urgente' ? -1 : 1));
 
-                    // Insertar respetando el orden de prioridad (Urgentes arriba)
-                    if (cat === "Urgente") {
-                        stack.insertBefore(div, stack.firstChild);
-                    } else {
-                        stack.appendChild(div);
-                    }
-                    
-                    // Quitar la clase de animación después de que termine para que no se repita
-                    setTimeout(() => div.classList.remove('new-entry'), 2500);
+                const container = document.getElementById('main-container');
+                if (allNotifs.length > 0 && allNotifs[0].cat === 'Urgente') {
+                    container.classList.add('has-urgent');
+                } else {
+                    container.classList.remove('has-urgent');
+                }
+
+                const stack = document.getElementById('notification-stack');
+                if (allNotifs.length === 0) {
+                    updateOrCreate(stack, 'empty', { titulo: "Sin avisos", msg: "Todo está en orden", cat: 'Empty', esNuevo: false }, true, 0);
+                } else {
+                    allNotifs.forEach((d, i) => updateOrCreate(stack, d.id, d, false, i));
+                }
+
+                const activeIds = allNotifs.length === 0 ? ['empty'] : allNotifs.map(d => d.id);
+                document.querySelectorAll('.notif-card').forEach(n => {
+                    if(!activeIds.includes(n.id)) { n.classList.remove('show'); setTimeout(() => n.remove(), 700); }
                 });
 
             } catch (e) { console.error(e); }
         }
 
-        setInterval(updateData, 5000); 
-        updateData();
+        function updateOrCreate(container, id, data, isEmpty, index) {
+            let el = document.getElementById(id);
+            const tema = assets[data.cat];
+            if (!el) {
+                el = document.createElement('div'); el.id = id; el.className = 'notif-card';
+                el.innerHTML = `<div class="new-indicator-dot"></div><div class="app-icon"></div><div class="content"><div class="title"></div><div class="message"></div></div><div class="date-badge"></div>`;
+                container.appendChild(el);
+                setTimeout(() => el.classList.add('show'), 120 * index);
+            }
+            el.style.order = index;
+            el.style.backgroundColor = tema.bg;
+            el.classList.remove('urgente-glow', 'active-glow');
+            if (data.cat === 'Urgente') el.classList.add('urgente-glow');
+            else if (!isEmpty) { 
+                el.classList.add('active-glow'); 
+                el.style.setProperty('--glow-color', tema.icon + '60'); 
+            }
+            const icon = el.querySelector('.app-icon');
+            icon.style.backgroundColor = tema.icon; icon.innerHTML = tema.svg;
+            el.querySelector('.title').innerText = data.titulo; el.querySelector('.title').style.color = tema.text;
+            el.querySelector('.message').innerText = data.msg;
+            
+            const dot = el.querySelector('.new-indicator-dot');
+            dot.style.display = (data.esNuevo && data.cat !== 'Urgente') ? 'block' : 'none';
+            
+            const badge = el.querySelector('.date-badge');
+            if (data.fecha) { 
+                badge.style.display = 'block'; 
+                badge.innerText = `${data.fecha}${data.hora ? ' | ' + data.hora : ''}`; 
+                badge.style.color = tema.text; 
+            } else badge.style.display = 'none';
+        }
+
+        setInterval(checkSheet, 5000);
+        checkSheet();
     </script>
 </body>
 </html>
