@@ -72,7 +72,7 @@
         
         .urgente-special .title, .urgente-special .message { color: white !important; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
 
-        /* ANIMACIÓN RADAR LENTA (6s para evitar lag) */
+        /* ANIMACIÓN RADAR LENTA */
         .urgente-special .app-icon::after, .urgente-special .app-icon::before {
             content: '';
             position: absolute;
@@ -164,7 +164,11 @@
                 for (let i = 1; i < rows.length; i++) {
                     const [nombre, apellido, nacimiento, incorporacion, msgCumple, msgAniv, msgBienvenida] = rows[i];
                     if (!nombre) continue;
-                    const fullName = `${nombre.trim()} ${apellido ? apellido.trim() : ''}`.toUpperCase();
+                    
+                    const firstName = nombre.trim().toUpperCase();
+                    const lastName = apellido ? apellido.trim().toUpperCase() : '';
+                    const fullName = `${firstName} ${lastName}`.trim();
+                    
                     const parseDate = (str) => {
                         if (!str) return null;
                         const parts = str.split('/');
@@ -173,17 +177,37 @@
                     const dateNac = parseDate(nacimiento);
                     const dateInc = parseDate(incorporacion);
 
+                    // CUMPLEAÑOS
                     if (dateNac && dateNac.d === day && dateNac.m === month) {
-                        celebrations.push({ titulo: `FELIZ CUMPLEAÑOS, ${fullName}`, msg: msgCumple || `Hoy celebramos tu día. Que pases una jornada excelente.`, cat: 'Celebracion', subCat: 'Cumple' });
+                        celebrations.push({ 
+                            titulo: `¡MUCHAS FELICIDADES, ${fullName}!`, 
+                            msg: msgCumple || `¡Hoy es tu gran día! Todo el equipo te desea un año lleno de éxitos y alegrías. ¡Disfrútalo!`, 
+                            cat: 'Celebracion', subCat: 'Cumple' 
+                        });
                     }
+
+                    // ANIVERSARIO O BIENVENIDA
                     if (dateInc && dateInc.d === day && dateInc.m === month) {
                         if (msgBienvenida && msgBienvenida.trim() !== "") {
-                            celebrations.push({ titulo: `BIENVENIDO/A, ${fullName}`, msg: msgBienvenida, cat: 'Celebracion', subCat: 'Bienvenida' });
+                            celebrations.push({ 
+                                titulo: `¡BIENVENIDO/A, ${fullName}!`, 
+                                msg: msgBienvenida, 
+                                cat: 'Celebracion', subCat: 'Bienvenida' 
+                            });
                         } else if (dateInc.y === year) {
-                            celebrations.push({ titulo: `BIENVENIDO/A, ${fullName}`, msg: `Te damos la bienvenida a nuestro equipo.`, cat: 'Celebracion', subCat: 'Bienvenida' });
+                            celebrations.push({ 
+                                titulo: `¡QUÉ ALEGRÍA TENERTE, ${fullName}!`, 
+                                msg: `Hoy comienzas tu camino con nosotros. ¡Estamos encantados de que formes parte de esta gran familia!`, 
+                                cat: 'Celebracion', subCat: 'Bienvenida' 
+                            });
                         } else {
                             const años = year - dateInc.y;
-                            celebrations.push({ titulo: `ANIVERSARIO DE ${fullName}`, msg: msgAniv || `Hoy cumple ${años} años con nosotros. Gracias por estar aquí.`, cat: 'Celebracion', subCat: 'Aniversario' });
+                            const plural = años === 1 ? "año" : "años";
+                            celebrations.push({ 
+                                titulo: `¡FELIZ ANIVERSARIO, ${fullName}!`, 
+                                msg: msgAniv || `¡Increíble! Ya sumas ${años} ${plural} con nosotros. Gracias por tu entrega y por hacer este equipo mejor cada día.`, 
+                                cat: 'Celebracion', subCat: 'Aniversario' 
+                            });
                         }
                     }
                 }
@@ -223,7 +247,7 @@
 
                 const celebEvents = await fetchCelebrations();
                 celebEvents.forEach((celeb, idx) => {
-                    allNotifs.push({ id: `celeb-${idx}`, ...celeb, badgeText: "HOY" });
+                    allNotifs.push({ id: `celeb-${idx}`, ...celeb, badgeText: "EVENTO ESPECIAL" });
                 });
 
                 allNotifs.sort((a, b) => (a.cat === 'Urgente' ? -1 : (b.cat === 'Urgente' ? 1 : (a.cat === 'Celebracion' ? -1 : 1))));
