@@ -46,49 +46,28 @@
         }
         .notif-card.show { transform: translateX(0); opacity: 1; }
 
-        .celeb-special, .urgente-special {
-            min-height: 140px !important;
+        /* ESTILOS POR CATEGORÍA */
+        .celeb-special { 
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 40%, #a1c4fd 80%, #c2e9fb 100%) !important; 
+            min-height: 140px;
             border: 2px solid #fff !important;
         }
 
-        .celeb-special {
-            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 40%, #a1c4fd 80%, #c2e9fb 100%) !important;
+        .urgente-special { 
+            background: #ff4b42 !important; 
+            min-height: 140px;
+            border: 2px solid #fff !important;
         }
 
-        .urgente-special {
-            background: #ff4b42 !important;
-        }
-
-        .celeb-special .app-icon, .urgente-special .app-icon { 
-            width: 75px; height: 75px; 
-            background: white !important; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            z-index: 5;
-        }
-
-        .celeb-special .title, .urgente-special .title { font-weight: 900 !important; font-size: 26px !important; color: #1a1a1a; }
-        .celeb-special .message, .urgente-special .message { font-weight: 700 !important; font-size: 20px !important; color: #333; }
-        .urgente-special .title, .urgente-special .message { color: white !important; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-
-        .urgente-special .app-icon::after, .urgente-special .app-icon::before {
-            content: '';
-            position: absolute;
-            width: 75px; height: 75px;
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.4);
-            animation: radar 6s ease-out infinite;
-            z-index: -1;
-            pointer-events: none;
-        }
-        .urgente-special .app-icon::after { animation-delay: 3s; }
-
-        @keyframes radar {
-            0% { transform: scale(1); opacity: 0.6; }
-            100% { transform: scale(2.8); opacity: 0; }
-        }
+        /* Color Azul Isopan para reposo y avisos normales */
+        .reposo-style { background-color: #d4eaff !important; } 
+        .aviso-style { background-color: #d4eaff !important; }
 
         .title { color: #1a1a1a; font-weight: 800; font-size: 22px; letter-spacing: -0.6px; }
         .message { color: #333; font-size: 18px; line-height: 1.3; font-weight: 600; }
+        
+        .celeb-special .title, .urgente-special .title { font-size: 26px; font-weight: 900; }
+        .urgente-special .title, .urgente-special .message { color: white !important; }
 
         .app-icon {
             position: relative;
@@ -96,20 +75,23 @@
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
         }
+        .celeb-special .app-icon, .urgente-special .app-icon { 
+            width: 75px; height: 75px; background: white !important; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
         .app-icon svg { width: 34px; height: 34px; fill: white; }
-        .celeb-special .app-icon svg { width: 42px; height: 42px; fill: #ff2d55; }
-        .urgente-special .app-icon svg { width: 42px; height: 42px; fill: #ff4b42; }
+        .celeb-special .app-icon svg { fill: #ff2d55 !important; width: 42px; height: 42px; }
+        .urgente-special .app-icon svg { fill: #ff4b42 !important; width: 42px; height: 42px; }
         
         .content { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; z-index: 2; }
         
-        /* FECHA MÁS GRANDE */
         .date-badge {
             display: none;
             font-size: 16px; font-weight: 900; padding: 10px 20px; border-radius: 14px;
             background: rgba(255, 255, 255, 0.9);
             color: #1a1a1a;
             text-transform: uppercase;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
             white-space: nowrap;
         }
         .date-badge:not(:empty) { display: block; }
@@ -126,162 +108,136 @@
         const CELEB_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSSadkiXq6jUCVSyiHwtutKKXkP3gxIFJmmHRJfnaLqYFxMJOYcNOU6SLURm2g090_DAK18G1Gtb7Ux/pub?output=csv';
 
         const SVGS = {
-            'Urgente': '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>',
             'Aviso': '<svg viewBox="0 0 24 24"><path d="M12 22a2.98 2.98 0 0 1-2.9-2h5.8a2.98 2.98 0 0 1-2.9 2zm9-3V9c0-4.97-4.03-9-9-9S3 4.03 3 9v7l-2 2v1h22v-1l-2-2z"/></svg>',
-            'Mantenimiento': '<svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.5 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>',
-            'Seguridad': '<svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12h-7V6.3l7-3.11v8.8z"/></svg>',
-            'Visitas': '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>',
-            'Pentano': '<svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-2 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>',
-            'Estrella': '<svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>',
-            'Corazon': '<svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>',
-            'Rayo': '<svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>'
+            'Check': '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
+            'Star': '<svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>',
+            'Heart': '<svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>',
+            'Bolt': '<svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>'
         };
 
-        const assets = {
-            'Urgente': { bg: '#ff4b42', icon: '#ff3b30' },
-            'Celebracion': { bg: 'transparent', icon: '#FF2D55' },
-            'Aviso': { bg: '#d4eaff', icon: '#007aff' },
-            'Mantenimiento': { bg: '#fff0cc', icon: '#ff9500' },
-            'Seguridad': { bg: '#ffd6d6', icon: '#ff3b30' },
-            'Visitas': { bg: '#e0ffd9', icon: '#34c759' },
-            'Pentano': { bg: '#f2e6ff', icon: '#af52de' }
+        const colors = {
+            'Isopan': '#007aff', // Azul estándar Isopan
+            'Urgente': '#ff3b30',
+            'Ceb': '#ff2d55'
         };
 
-        async function fetchCelebrations() {
+        async function updateDashboard() {
+            let items = [];
+            const hoy = new Date(); hoy.setHours(0,0,0,0);
+            const mañana = new Date(hoy); mañana.setDate(mañana.getDate() + 1);
+
             try {
-                const response = await fetch(`${CELEB_SHEET_URL}&t=${Date.now()}`);
-                const csvText = await response.text();
-                const rows = csvText.split('\n').map(row => row.split(','));
-                const today = new Date();
-                const day = today.getDate();
-                const month = today.getMonth() + 1;
-                const year = today.getFullYear();
-                let celebrations = [];
-
-                for (let i = 1; i < rows.length; i++) {
-                    const [nombre, apellido, nacimiento, incorporacion, msgCumple, msgAniv, msgBienvenida] = rows[i];
-                    if (!nombre) continue;
-                    
-                    const fullName = `${nombre.trim()} ${apellido ? apellido.trim() : ''}`.toUpperCase();
-                    
-                    const parseDate = (str) => {
-                        if (!str) return null;
-                        const parts = str.split('/');
-                        return { d: parseInt(parts[0]), m: parseInt(parts[1]), y: parseInt(parts[2]) };
-                    };
-                    const dateNac = parseDate(nacimiento);
-                    const dateInc = parseDate(incorporacion);
-
-                    if (dateNac && dateNac.d === day && dateNac.m === month) {
-                        celebrations.push({ 
-                            titulo: `¡MUCHAS FELICIDADES, ${fullName}!`, 
-                            msg: msgCumple || `Hoy es tu gran día. Todo el equipo te desea un año lleno de éxitos y alegrías. Disfrútalo.`, 
-                            cat: 'Celebracion', subCat: 'Cumple' 
-                        });
-                    }
-
-                    if (dateInc && dateInc.d === day && dateInc.m === month) {
-                        if (msgBienvenida && msgBienvenida.trim() !== "") {
-                            celebrations.push({ titulo: `BIENVENIDO/A AL EQUIPO, ${fullName}`, msg: msgBienvenida, cat: 'Celebracion', subCat: 'Bienvenida' });
-                        } else if (dateInc.y === year) {
-                            celebrations.push({ titulo: `¡BIENVENIDO/A  ${fullName}!`, msg: `Estamos encantados de que formes parte de nuestro equipo.`, cat: 'Celebracion', subCat: 'Bienvenida' });
-                        } else {
-                            const años = year - dateInc.y;
-                            celebrations.push({ titulo: `FELIZ ANIVERSARIO, ${fullName}`, msg: msgAniv || `Increíble. Ya sumas ${años} años con nosotros. Gracias por tu entrega diaria.`, cat: 'Celebracion', subCat: 'Aniversario' });
+                // 1. Notificaciones desde Google Sheets
+                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&refresh=${Date.now()}`;
+                const res = await fetch(url);
+                const text = await res.text();
+                const json = JSON.parse(text.substr(47).slice(0, -2));
+                
+                json.table.rows.forEach((row, idx) => {
+                    const c = row.c;
+                    if (c && (c[5]?.v || "").toString().toUpperCase() === "SI") {
+                        let f = c[3]?.v ? new Date(eval("new " + c[3].v)) : null;
+                        if (f) f.setHours(0,0,0,0);
+                        
+                        if (!f || f >= hoy) {
+                            let label = "";
+                            if (f) {
+                                if (f.getTime() === hoy.getTime()) label = "HOY";
+                                else if (f.getTime() === mañana.getTime()) label = "MAÑANA";
+                                else label = c[3]?.f || "";
+                            }
+                            items.push({
+                                id: `n-${idx}`,
+                                title: c[0]?.v || "Aviso",
+                                msg: c[1]?.v || "",
+                                cat: (c[2]?.v || "").includes("Urgen") ? "Urgente" : "Aviso",
+                                badge: label
+                            });
                         }
                     }
-                }
-                return celebrations;
-            } catch (e) { return []; }
-        }
+                });
 
-        async function checkSheet() {
-            try {
-                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&refresh=${Date.now()}`;
-                const response = await fetch(url);
-                const text = await response.text();
-                const json = JSON.parse(text.substr(47).slice(0, -2));
-                const rows = json.table.rows;
+                // 2. Celebraciones
+                const cRes = await fetch(`${CELEB_SHEET_URL}&t=${Date.now()}`);
+                const cText = await cRes.text();
+                const cRows = cText.split('\n').map(r => r.split(','));
                 
-                let allNotifs = [];
-                const hoy = new Date(); hoy.setHours(0,0,0,0);
-                const mañana = new Date(hoy); mañana.setDate(mañana.getDate() + 1);
+                for (let i = 1; i < cRows.length; i++) {
+                    const [nom, ape, nac, inc] = cRows[i];
+                    if (!nom) continue;
+                    const full = `${nom.trim()} ${ape ? ape.trim() : ''}`.toUpperCase();
+                    const dNac = nac?.split('/');
+                    const dInc = inc?.split('/');
 
-                rows.forEach((row, index) => {
-                    const c = row.c;
-                    if (!c || (c[5]?.v || "").toString().toUpperCase() !== "SI") return;
-                    
-                    let fechaAviso = null;
-                    if (c[3]?.v) {
-                        const d = eval("new " + c[3].v);
-                        fechaAviso = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+                    if (dNac && parseInt(dNac[0]) === hoy.getDate() && parseInt(dNac[1]) === (hoy.getMonth()+1)) {
+                        items.push({ id: `c-n-${i}`, title: `MUCHAS FELICIDADES, ${full}`, msg: "Hoy es tu gran día. Todo el equipo te desea un año lleno de alegrías. Disfrútalo.", cat: "Celebracion", sub: "Star", badge: "HOY" });
                     }
-                    if (fechaAviso && fechaAviso < hoy) return;
-                    
-                    let etiquetaFecha = "";
-                    if (fechaAviso) {
-                        if (fechaAviso.getTime() === hoy.getTime()) etiquetaFecha = "HOY";
-                        else if (fechaAviso.getTime() === mañana.getTime()) etiquetaFecha = "MAÑANA";
-                        else etiquetaFecha = c[3]?.f || "";
+                    if (dInc && parseInt(dInc[0]) === hoy.getDate() && parseInt(dInc[1]) === (hoy.getMonth()+1)) {
+                        const años = hoy.getFullYear() - parseInt(dInc[2]);
+                        if (años > 0) items.push({ id: `c-a-${i}`, title: `FELIZ ANIVERSARIO, ${full}`, msg: `Increíble. Ya sumas ${años} años con nosotros. Gracias por tu entrega diaria.`, cat: "Celebracion", sub: "Heart", badge: "HOY" });
+                        else items.push({ id: `c-b-${i}`, title: `BIENVENIDO/A AL EQUIPO, ${full}`, msg: "Hoy comienzas tu camino con nosotros. Estamos encantados de que formes parte de esta familia.", cat: "Celebracion", sub: "Bolt", badge: "HOY" });
                     }
+                }
 
-                    let etiquetaHora = c[4]?.f || "";
-                    let finalBadge = (etiquetaFecha && etiquetaHora) ? `${etiquetaFecha} | ${etiquetaHora}` : (etiquetaFecha || etiquetaHora);
+                // 3. Tarjeta de Reposo (Azul Isopan con Tick)
+                if (items.length === 0) {
+                    items.push({ id: 'reposo', title: 'TODO EN ORDEN', msg: 'No hay avisos ni eventos para el día de hoy.', cat: 'Reposo', badge: '' });
+                }
 
-                    let catTexto = (c[2]?.v || "").toString();
-                    let categoria = catTexto.includes("Urgen") ? "Urgente" : (catTexto.includes("Mante") ? "Mantenimiento" : (catTexto.includes("Visita") ? "Visitas" : (catTexto.includes("Seguri") ? "Seguridad" : (catTexto.includes("Penta") ? "Pentano" : "Aviso"))));
-                    allNotifs.push({ id: `notif-${index}`, titulo: c[0]?.v || "Aviso", msg: c[1]?.v || "", cat: categoria, badgeText: finalBadge });
-                });
-
-                const celebEvents = await fetchCelebrations();
-                celebEvents.forEach((celeb, idx) => {
-                    allNotifs.push({ id: `celeb-${idx}`, ...celeb, badgeText: "HOY" });
-                });
-
-                allNotifs.sort((a, b) => (a.cat === 'Urgente' ? -1 : (b.cat === 'Urgente' ? 1 : (a.cat === 'Celebracion' ? -1 : 1))));
-
-                const stack = document.getElementById('notification-stack');
-                allNotifs.forEach((d, i) => updateOrCreate(stack, d.id, d, i));
-
-                const activeIds = allNotifs.map(d => d.id);
-                document.querySelectorAll('.notif-card').forEach(n => {
-                    if(!activeIds.includes(n.id)) { n.classList.remove('show'); setTimeout(() => n.remove(), 700); }
-                });
+                renderItems(items);
             } catch (e) { console.error(e); }
         }
 
-        function updateOrCreate(container, id, data, index) {
-            let el = document.getElementById(id);
-            const tema = assets[data.cat];
-            if (!el) {
-                el = document.createElement('div'); el.id = id; el.className = 'notif-card';
-                el.innerHTML = `<div class="app-icon"></div><div class="content"><div class="title"></div><div class="message"></div></div><div class="date-badge"></div>`;
-                container.appendChild(el);
-                setTimeout(() => el.classList.add('show'), 100);
-            }
-            el.style.order = index;
-            el.style.backgroundColor = tema.bg;
-            el.classList.toggle('celeb-special', data.cat === 'Celebracion');
-            el.classList.toggle('urgente-special', data.cat === 'Urgente');
-            
-            const iconContainer = el.querySelector('.app-icon');
-            iconContainer.style.backgroundColor = (data.cat === 'Celebracion' || data.cat === 'Urgente') ? 'white' : tema.icon;
-            
-            if (data.cat === 'Celebracion') {
-                if (data.subCat === 'Cumple') iconContainer.innerHTML = SVGS['Estrella'];
-                else if (data.subCat === 'Bienvenida') iconContainer.innerHTML = SVGS['Rayo'];
-                else iconContainer.innerHTML = SVGS['Corazon'];
-            } else {
-                iconContainer.innerHTML = SVGS[data.cat] || SVGS['Aviso'];
-            }
+        function renderItems(data) {
+            const stack = document.getElementById('notification-stack');
+            const ids = data.map(d => d.id);
 
-            el.querySelector('.title').innerText = data.titulo;
-            el.querySelector('.message').innerText = data.msg;
-            el.querySelector('.date-badge').innerText = data.badgeText || "";
+            document.querySelectorAll('.notif-card').forEach(el => {
+                if (!ids.includes(el.id)) {
+                    el.classList.remove('show');
+                    setTimeout(() => el.remove(), 600);
+                }
+            });
+
+            data.forEach((d, i) => {
+                let el = document.getElementById(d.id);
+                if (!el) {
+                    el = document.createElement('div');
+                    el.id = d.id;
+                    el.className = 'notif-card';
+                    el.innerHTML = `<div class="app-icon"></div><div class="content"><div class="title"></div><div class="message"></div></div><div class="date-badge"></div>`;
+                    stack.appendChild(el);
+                    setTimeout(() => el.classList.add('show'), 100);
+                }
+                
+                el.style.order = i;
+                el.className = `notif-card show ${d.cat === 'Celebracion' ? 'celeb-special' : d.cat === 'Urgente' ? 'urgente-special' : d.cat === 'Reposo' ? 'reposo-style' : 'aviso-style'}`;
+                
+                el.querySelector('.title').innerText = d.title;
+                el.querySelector('.message').innerText = d.msg;
+                const badge = el.querySelector('.date-badge');
+                badge.innerText = d.badge;
+                badge.style.display = d.badge ? 'block' : 'none';
+                
+                const iconBox = el.querySelector('.app-icon');
+                if (d.cat === 'Celebracion') {
+                    iconBox.innerHTML = SVGS[d.sub] || SVGS['Star'];
+                    iconBox.style.backgroundColor = 'white';
+                } else if (d.cat === 'Urgente') {
+                    iconBox.innerHTML = SVGS['Aviso'];
+                    iconBox.style.backgroundColor = 'white';
+                } else if (d.cat === 'Reposo') {
+                    iconBox.innerHTML = SVGS['Check'];
+                    iconBox.style.backgroundColor = colors.Isopan;
+                } else {
+                    iconBox.innerHTML = SVGS['Aviso'];
+                    iconBox.style.backgroundColor = colors.Isopan;
+                }
+            });
         }
 
-        setInterval(checkSheet, 20000);
-        checkSheet();
+        setInterval(updateDashboard, 15000);
+        updateDashboard();
     </script>
 </body>
 </html>
