@@ -32,85 +32,74 @@
             position: relative;
             width: 100%; 
             border-radius: 25px;
-            display: flex; align-items: center; gap: 18px;
-            padding: 18px 26px; 
+            display: flex; align-items: center; gap: 22px; /* Más espacio entre icono y texto */
+            padding: 22px 30px; 
             box-sizing: border-box;
-            border: 1px solid rgba(255,255,255,0.9);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+            border: 1px solid rgba(255,255,255,0.8);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.06);
             transform: translateX(110%); 
             opacity: 0;
             transition: transform 0.6s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.6s ease;
             background-color: white;
             will-change: transform;
-            overflow: hidden; /* Crucial para recortar el confetti */
+            overflow: hidden;
         }
         .notif-card.show { transform: translateX(0); opacity: 1; }
 
-        /* CELEBRACIONES CON GRAN ACUMULACIÓN DE CONFETTI FIJO */
+        /* CELEBRACIÓN LIMPIA */
         .celeb-special {
-            min-height: 130px !important;
+            min-height: 140px !important;
             border: 2px solid #fff !important;
             background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 40%, #a1c4fd 80%, #c2e9fb 100%) !important;
         }
 
-        /* Capa de Confetti Denso y Grande */
-        .celeb-special::before {
-            content: "";
-            position: absolute;
-            /* Ocupa toda la tarjeta */
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            /* Puntos mucho más grandes y variados */
-            background-image: 
-                radial-gradient(circle, #ff2d55 5px, transparent 6px), 
-                radial-gradient(circle, #ffcc00 6px, transparent 7px), 
-                radial-gradient(circle, #ffffff 5px, transparent 6px),
-                radial-gradient(circle, #4facfe 5px, transparent 6px),
-                radial-gradient(circle, #ff5e62 4px, transparent 5px),
-                radial-gradient(circle, #34C759 4px, transparent 5px);
-            /* Tamaños de repetición grandes para evitar patrones obvios */
-            background-size: 130px 170px, 190px 230px, 250px 210px, 160px 290px, 110px 140px, 210px 180px;
-            /* Posiciones iniciales variadas */
-            background-position: 10% 10%, 30% 50%, 70% 20%, 90% 80%, 50% 90%, 80% 60%;
-            opacity: 0.7; /* Más visible */
-            /* Máscara para que se acumule a la derecha pero no tape el texto de la izquierda */
-            -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 10%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0) 80%);
-            mask-image: linear-gradient(to left, rgba(0,0,0,1) 10%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0) 80%);
-        }
-
         .celeb-special .app-icon { 
-            width: 68px; height: 68px; 
+            width: 75px; height: 75px; 
             background: white !important; 
-            z-index: 2; /* Por encima del confetti */
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
         
-        .celeb-special .title { font-weight: 900 !important; font-size: 24px !important; color: #1a1a1a; z-index: 2; text-shadow: 0 1px 2px rgba(255,255,255,0.5); }
-        .celeb-special .message { font-weight: 700 !important; font-size: 19px !important; color: #333; z-index: 2; text-shadow: 0 1px 2px rgba(255,255,255,0.5); }
+        .celeb-special .title { font-weight: 900 !important; font-size: 26px !important; color: #1a1a1a; }
+        .celeb-special .message { font-weight: 700 !important; font-size: 20px !important; color: #333; }
+
+        /* Texto para tarjetas normales (MÁS GRANDES) */
+        .title { 
+            color: #1a1a1a; 
+            font-weight: 800; 
+            font-size: 22px; /* Subido de 19px */
+            letter-spacing: -0.6px; 
+        }
+        .message { 
+            color: #333; 
+            font-size: 18px; /* Subido de 16px */
+            line-height: 1.3; 
+            font-weight: 600; 
+        }
 
         .app-icon {
-            width: 50px; height: 50px; border-radius: 15px;
+            width: 55px; height: 55px; border-radius: 16px;
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
         }
-        .app-icon svg { width: 30px; height: 30px; fill: white; }
-        .celeb-special .app-icon svg { width: 38px; height: 38px; fill: #ff2d55; }
+        .app-icon svg { width: 34px; height: 34px; fill: white; }
+        .celeb-special .app-icon svg { width: 42px; height: 42px; fill: #ff2d55; }
         
-        .content { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; z-index: 2; }
-        .title { font-weight: 800; font-size: 19px; color: #1a1a1a; letter-spacing: -0.5px; }
-        .message { font-size: 16px; line-height: 1.3; font-weight: 600; color: #444; }
+        .content { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; z-index: 2; }
         
+        /* FECHA Y HORA (MÁS GRANDES Y VISIBLES) */
         .date-badge {
             display: none;
-            font-size: 12px; font-weight: 900; padding: 7px 14px; border-radius: 12px;
-            background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(0,0,0,0.1);
+            font-size: 13px; /* Subido de 11px */
+            font-weight: 900; 
+            padding: 8px 16px; 
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.85); /* Más opaco */
+            color: #1a1a1a; /* Texto más oscuro para contraste */
             text-transform: uppercase;
-            z-index: 3; /* Por encima de todo */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            white-space: nowrap;
         }
         .date-badge:not(:empty) { display: block; }
-
-        .urgente-glow { border: 2px solid #FF3B30 !important; background: #ffebeb !important; }
     </style>
 </head>
 <body>
@@ -136,13 +125,13 @@
         };
 
         const assets = {
-            'Urgente': { bg: '#ffebeb', icon: '#FF3B30' },
+            'Urgente': { bg: '#ffd6d6', icon: '#ff3b30' },
             'Celebracion': { bg: 'transparent', icon: '#FF2D55' },
-            'Aviso': { bg: '#eef6ff', icon: '#007AFF' },
-            'Mantenimiento': { bg: '#fff9e6', icon: '#FF9500' },
-            'Seguridad': { bg: '#ffebeb', icon: '#FF3B30' },
-            'Visitas': { bg: '#f2fff5', icon: '#34C759' },
-            'Pentano': { bg: '#f9f2ff', icon: '#AF52DE' }
+            'Aviso': { bg: '#d4eaff', icon: '#007aff' },
+            'Mantenimiento': { bg: '#fff0cc', icon: '#ff9500' },
+            'Seguridad': { bg: '#ffd6d6', icon: '#ff3b30' },
+            'Visitas': { bg: '#e0ffd9', icon: '#34c759' },
+            'Pentano': { bg: '#f2e6ff', icon: '#af52de' }
         };
 
         async function fetchCelebrations() {
@@ -169,7 +158,7 @@
                     const dateInc = parseDate(incorporacion);
 
                     if (dateNac && dateNac.d === day && dateNac.m === month) {
-                        celebrations.push({ titulo: `FELIZ CUMPLEANOS, ${fullName}`, msg: msgCumple || `Hoy celebramos tu dia. Que pases una jornada excelente.`, cat: 'Celebracion', subCat: 'Cumple' });
+                        celebrations.push({ titulo: `FELIZ CUMPLEAÑOS, ${fullName}`, msg: msgCumple || `Hoy celebramos tu día. Que pases una jornada excelente.`, cat: 'Celebracion', subCat: 'Cumple' });
                     }
                     if (dateInc && dateInc.d === day && dateInc.m === month) {
                         if (msgBienvenida && msgBienvenida.trim() !== "") {
@@ -178,8 +167,8 @@
                             celebrations.push({ titulo: `BIENVENIDO/A, ${fullName}`, msg: `Te damos la bienvenida a nuestro equipo.`, cat: 'Celebracion', subCat: 'Bienvenida' });
                         } else {
                             const años = year - dateInc.y;
-                            const textoAños = años === 1 ? "1 ano" : `${años} anos`;
-                            celebrations.push({ titulo: `ANIVERSARIO DE ${fullName}`, msg: msgAniv || `Hoy cumple ${textoAños} con nosotros. Gracias por estar aqui.`, cat: 'Celebracion', subCat: 'Aniversario' });
+                            const textoAños = años === 1 ? "1 año" : `${años} años`;
+                            celebrations.push({ titulo: `ANIVERSARIO DE ${fullName}`, msg: msgAniv || `Hoy cumple ${textoAños} con nosotros. Gracias por estar aquí.`, cat: 'Celebracion', subCat: 'Aniversario' });
                         }
                     }
                 }
@@ -210,10 +199,7 @@
                     
                     let etiquetaFecha = (fechaAviso && fechaAviso.getTime() === hoy.getTime()) ? "HOY" : (c[3]?.f || "");
                     let etiquetaHora = c[4]?.f || "";
-                    let finalBadge = "";
-                    if (etiquetaFecha && etiquetaHora) finalBadge = `${etiquetaFecha} | ${etiquetaHora}`;
-                    else if (etiquetaFecha) finalBadge = etiquetaFecha;
-                    else if (etiquetaHora) finalBadge = etiquetaHora;
+                    let finalBadge = (etiquetaFecha && etiquetaHora) ? `${etiquetaFecha} | ${etiquetaHora}` : (etiquetaFecha || etiquetaHora);
 
                     let catTexto = (c[2]?.v || "").toString();
                     let categoria = catTexto.includes("Urgen") ? "Urgente" : (catTexto.includes("Mante") ? "Mantenimiento" : (catTexto.includes("Visita") ? "Visitas" : (catTexto.includes("Seguri") ? "Seguridad" : (catTexto.includes("Penta") ? "Pentano" : "Aviso"))));
@@ -249,7 +235,6 @@
             el.style.order = index;
             el.style.backgroundColor = tema.bg;
             el.classList.toggle('celeb-special', data.cat === 'Celebracion');
-            el.classList.toggle('urgente-glow', data.cat === 'Urgente');
             
             const iconContainer = el.querySelector('.app-icon');
             iconContainer.style.backgroundColor = (data.cat === 'Celebracion') ? 'transparent' : tema.icon;
