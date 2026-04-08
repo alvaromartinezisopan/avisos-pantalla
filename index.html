@@ -59,6 +59,15 @@
         .title { color: #1a1a1a; font-weight: 800; font-size: 22px; letter-spacing: -0.6px; }
         .message { color: #333; font-size: 18px; line-height: 1.3; font-weight: 600; }
         
+        .job-role { 
+            font-size: 14px; 
+            font-weight: 700; 
+            color: rgba(0,0,0,0.6); 
+            text-transform: uppercase; 
+            margin-top: -2px;
+            margin-bottom: 4px;
+        }
+
         .celeb-special .title, .urgente-special .title { font-size: 26px; font-weight: 900; }
         .urgente-special .title, .urgente-special .message { color: white !important; }
 
@@ -137,7 +146,8 @@
                 
                 json.table.rows.forEach((row, idx) => {
                     const c = row.c;
-                    if (c && (c[5]?.v || "").toString().toUpperCase() === "SI") {
+                    // MEJORA: Solo procesa si hay un Título (columna A) y ACTIVO es SI
+                    if (c && c[0] && c[0].v && (c[5]?.v || "").toString().toUpperCase() === "SI") {
                         let fVal = c[3]?.v;
                         let hText = c[4]?.f || "";
                         let f = fVal ? new Date(eval("new " + fVal)) : null;
@@ -169,21 +179,22 @@
                     }
                 });
 
-                // 2. Celebraciones (Corregidas)
+                // 2. Celebraciones
                 const cRes = await fetch(`${CELEB_SHEET_URL}&t=${Date.now()}`);
                 const cText = await cRes.text();
                 const cRows = cText.split('\n').map(r => r.split(','));
 
                 for (let i = 1; i < cRows.length; i++) {
-                    const [nom, ape, nac, inc] = cRows[i];
-                    if (!nom) continue;
+                    const [nom, ape, nac, inc, puesto] = cRows[i];
+                    if (!nom || nom.trim() === "") continue; // Ignora si el nombre está vacío
                     const full = `${nom.trim()} ${ape ? ape.trim() : ''}`.toUpperCase();
                     const dN = nac?.split('/');
                     const dI = inc?.split('/');
+                    const cargo = puesto ? puesto.trim() : "";
 
                     // Cumpleaños
                     if (dN && parseInt(dN[0]) === ahora.getDate() && parseInt(dN[1]) === (ahora.getMonth()+1)) {
-                        items.push({ id: `c-n-${i}`, title: `¡FELICIDADES, ${full}!`, msg: "Hoy es tu gran día. Todo el equipo te desea un año lleno de alegrías. ¡Disfrútalo!", cat: "Celebracion", sub: "Star", badge: "HOY" });
+                        items.push({ id: `c-n-${i}`, title: `¡FELICIDADES, ${full}!`, role: cargo, msg: "Hoy es tu gran día. Todo el equipo te desea un año lleno de alegrías. ¡Disfrútalo!", cat: "Celebracion", sub: "Star", badge: "HOY" });
                     }
 
                     // Aniversarios y Bienvenidas
@@ -191,9 +202,9 @@
                         const aniosCumplidos = ahora.getFullYear() - parseInt(dI[2]);
                         if (aniosCumplidos > 0) {
                             const textoAnio = aniosCumplidos === 1 ? "año" : "años";
-                            items.push({ id: `c-a-${i}`, title: `¡FELIZ ANIVERSARIO, ${full}!`, msg: `Hoy cumples ${aniosCumplidos} ${textoAnio} con nosotros. Gracias por tu compromiso diario.`, cat: "Celebracion", sub: "Heart", badge: "HOY" });
+                            items.push({ id: `c-a-${i}`, title: `¡FELIZ ANIVERSARIO, ${full}!`, role: cargo, msg: `Increíble. Hoy cumples ${aniosCumplidos} ${textoAnio} con nosotros. Gracias por tu compromiso diario.`, cat: "Celebracion", sub: "Heart", badge: "HOY" });
                         } else {
-                            items.push({ id: `c-b-${i}`, title: `¡BIENVENIDO/A, ${full}!`, msg: "Estamos encantados de tenerte en el equipo.", cat: "Celebracion", sub: "Bolt", badge: "HOY" });
+                            items.push({ id: `c-b-${i}`, title: `¡BIENVENIDO/A, ${full}!`, role: cargo, msg: "Hoy comienzas tu camino en Isopan. Estamos encantados de tenerte en el equipo. ¡A por todas!", cat: "Celebracion", sub: "Bolt", badge: "HOY" });
                         }
                     }
                 }
@@ -215,7 +226,7 @@
                 let el = document.getElementById(d.id);
                 if (!el) {
                     el = document.createElement('div'); el.id = d.id; el.className = 'notif-card';
-                    el.innerHTML = `<div class="app-icon"></div><div class="content"><div class="title"></div><div class="message"></div></div><div class="date-badge"></div>`;
+                    el.innerHTML = `<div class="app-icon"></div><div class="content"><div class="title"></div><div class="job-role"></div><div class="message"></div></div><div class="date-badge"></div>`;
                     stack.appendChild(el); setTimeout(() => el.classList.add('show'), 100);
                 }
                 const tema = assets[d.cat] || assets['Aviso'];
@@ -225,6 +236,15 @@
                 
                 el.querySelector('.title').innerText = d.title;
                 el.querySelector('.message').innerText = d.msg;
+                
+                const roleEl = el.querySelector('.job-role');
+                if (d.role) {
+                    roleEl.innerText = d.role;
+                    roleEl.style.display = 'block';
+                } else {
+                    roleEl.style.display = 'none';
+                }
+
                 const badge = el.querySelector('.date-badge');
                 badge.innerText = d.badge; badge.style.display = d.badge ? 'block' : 'none';
                 
