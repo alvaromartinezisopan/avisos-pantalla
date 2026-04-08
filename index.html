@@ -244,11 +244,14 @@
 
         function launchConfetti() {
             if (!activeCelebrations) return;
+            // Configuración para que caiga desde arriba
             confetti({ 
-                particleCount: 60, 
-                spread: 70, 
-                origin: { y: 0.7 },
-                ticks: 250,
+                particleCount: 100, 
+                spread: 120, 
+                origin: { y: -0.1, x: 0.5 }, // Sale ligeramente fuera de la pantalla por arriba
+                gravity: 0.8,
+                scalar: 1.2,
+                ticks: 300,
                 colors: ['#2a6f8f', '#9cbd68', '#ff2d55', '#ffd700']
             });
         }
