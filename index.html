@@ -174,7 +174,7 @@
 
                     if (dateNac && dateNac.d === day && dateNac.m === month) {
                         celebrations.push({ 
-                            titulo: `MUCHAS FELICIDADES, ${fullName}`, 
+                            titulo: `¡MUCHAS FELICIDADES, ${fullName}!`, 
                             msg: msgCumple || `Hoy es tu gran día. Todo el equipo te desea un año lleno de éxitos y alegrías. Disfrútalo.`, 
                             cat: 'Celebracion', subCat: 'Cumple' 
                         });
@@ -184,7 +184,7 @@
                         if (msgBienvenida && msgBienvenida.trim() !== "") {
                             celebrations.push({ titulo: `BIENVENIDO/A AL EQUIPO, ${fullName}`, msg: msgBienvenida, cat: 'Celebracion', subCat: 'Bienvenida' });
                         } else if (dateInc.y === year) {
-                            celebrations.push({ titulo: `QUÉ ALEGRÍA TENERTE, ${fullName}`, msg: `Hoy comienzas tu camino con nosotros. Estamos encantados de que formes parte de esta familia.`, cat: 'Celebracion', subCat: 'Bienvenida' });
+                            celebrations.push({ titulo: `¡BIENVENIDO/A  ${fullName}!`, msg: `Estamos encantados de que formes parte de nuestro equipo.`, cat: 'Celebracion', subCat: 'Bienvenida' });
                         } else {
                             const años = year - dateInc.y;
                             celebrations.push({ titulo: `FELIZ ANIVERSARIO, ${fullName}`, msg: msgAniv || `Increíble. Ya sumas ${años} años con nosotros. Gracias por tu entrega diaria.`, cat: 'Celebracion', subCat: 'Aniversario' });
