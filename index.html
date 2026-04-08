@@ -162,7 +162,7 @@
 
                     if (dateNac && dateNac.d === day && dateNac.m === month) {
                         celebrations.push({ 
-                            titulo: `🎂 ¡FELIZ CUMPLEAÑOS, ${fullName}!`, 
+                            titulo: `¡FELIZ CUMPLEAÑOS, ${fullName}!`, 
                             msg: msgCumple || `¡Hoy celebramos tu día! Que pases una jornada excelente. 🥳✨`, 
                             cat: 'Celebracion', subCat: 'Cumple' 
                         });
@@ -170,14 +170,14 @@
                     if (dateInc && dateInc.d === day && dateInc.m === month) {
                         if (dateInc.y === year) {
                             celebrations.push({ 
-                                titulo: `🚀 ¡BIENVENIDO/A, ${fullName}!`, 
-                                msg: msgBienvenida || `¡Damos la bienvenida oficial a nuestro equipo! ¡A por todas! 👏🔥`, 
+                                titulo: `¡BIENVENIDO/A, ${fullName}!`, 
+                                msg: msgBienvenida || `¡Te damos la bienvenida a nuestro equipo! ¡A por todas! 👏🔥`, 
                                 cat: 'Celebracion', subCat: 'Bienvenida' 
                             });
                         } else {
                             const años = year - dateInc.y;
                             celebrations.push({ 
-                                titulo: `🎖️ ¡ANIVERSARIO DE ${fullName}!`, 
+                                titulo: `¡ANIVERSARIO DE ${fullName}!`, 
                                 msg: msgAniv || `Hoy cumple ${años} años con nosotros en Isopan. ¡Gracias por estar aquí! 🥂💙`, 
                                 cat: 'Celebracion', subCat: 'Aniversario' 
                             });
