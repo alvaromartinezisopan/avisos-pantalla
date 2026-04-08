@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
         body, html {
             margin: 0; padding: 0;
@@ -41,37 +42,33 @@
             box-shadow: 0 8px 20px rgba(0,0,0,0.06);
             transform: translateX(110%); opacity: 0;
             transition: transform 0.8s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.8s ease;
+            will-change: transform, opacity;
         }
         .notif-card.show { transform: translateX(0); opacity: 1; }
 
-        .urgente-glow { 
-            animation: pulseUrgente 2s infinite; 
-            border: 2px solid rgba(255, 59, 48, 0.4) !important;
-            z-index: 10; 
-        }
-        
-        @keyframes pulseUrgente { 
-            0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.5); } 
-            70% { box-shadow: 0 0 0 20px rgba(255, 59, 48, 0); } 
-            100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); } 
-        }
-
-        .active-glow::after { 
+        .notif-card::after {
             content: ""; position: absolute; top: -1px; left: -1px; right: -1px; bottom: -1px;
             border-radius: 21px; z-index: -1; pointer-events: none;
-            box-shadow: 0 0 20px 8px var(--glow-color); 
-            animation: glowFade 8s forwards; 
         }
 
+        .urgente-glow::after { animation: pulseUrgente 2.2s infinite ease-in-out; opacity: 1; }
+        .active-glow::after { box-shadow: 0 0 20px 8px var(--glow-color); animation: glowFade 8s forwards; }
+
+        @keyframes pulseUrgente {
+            0%, 100% { box-shadow: 0 0 18px 5px rgba(255, 59, 48, 0.4); }
+            50% { box-shadow: 0 0 35px 12px rgba(255, 59, 48, 0.6); }
+        }
         @keyframes glowFade { 0%, 100% { opacity: 0; } 10%, 90% { opacity: 1; } }
 
         .app-icon {
             width: 48px; height: 48px; border-radius: 14px;
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            font-size: 28px;
+            position: relative;
         }
         .app-icon svg { width: 28px; height: 28px; fill: white; }
-
+        
         .content { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
         .title { font-weight: 800; font-size: 18px; color: #1a1a1a; letter-spacing: -0.5px; }
         .message { font-size: 15px; line-height: 1.3; font-weight: 600; color: #333; }
@@ -82,9 +79,28 @@
             text-transform: uppercase; white-space: nowrap;
         }
 
-        .new-indicator-dot {
-            position: absolute; top: 12px; right: 18px;
-            width: 9px; height: 9px; background-color: #007aff; border-radius: 50%;
+        /* DISEÑO CELEBRACIONES */
+        .celeb-special {
+            min-height: 125px !important;
+            padding: 24px 30px !important;
+            border: 2px solid #fff !important;
+            background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #a1c4fd, #c2e9fb);
+            background-size: 400% 400% !important;
+            animation: gradientMove 30s ease infinite !important;
+        }
+        .celeb-special .app-icon { width: 65px; height: 65px; font-size: 40px; background: white !important; }
+        .celeb-special .title { 
+            font-weight: 900 !important; 
+            font-size: 23px !important; 
+            color: #000;
+            text-transform: uppercase;
+        }
+        .celeb-special .message { font-weight: 700 !important; font-size: 18px !important; color: #222; }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
     </style>
 </head>
@@ -96,16 +112,82 @@
 
     <script>
         const SHEET_ID = '168DpGwqRcSsXtJoGPNqzJtHhtjjfFtrpcqLnnKq8CIY';
+        const CELEB_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSSadkiXq6jUCVSyiHwtutKKXkP3gxIFJmmHRJfnaLqYFxMJOYcNOU6SLURm2g090_DAK18G1Gtb7Ux/pub?output=csv';
+
+        const SVGS = {
+            'Urgente': '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>',
+            'Aviso': '<svg viewBox="0 0 24 24"><path d="M12 22a2.98 2.98 0 0 1-2.9-2h5.8a2.98 2.98 0 0 1-2.9 2zm9-3V9c0-4.97-4.03-9-9-9S3 4.03 3 9v7l-2 2v1h22v-1l-2-2z"/></svg>',
+            'Mantenimiento': '<svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.5 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>',
+            'Seguridad': '<svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12h-7V6.3l7-3.11v8.8z"/></svg>',
+            'Visitas': '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>',
+            'Pentano': '<svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-2 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>',
+            'Empty': '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>'
+        };
 
         const assets = {
-            'Urgente': { bg: 'rgb(255, 230, 230)', icon: '#FF3B30', text: '#600', svg: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>'},
-            'Aviso': { bg: 'rgb(225, 240, 255)', icon: '#007AFF', text: '#003', svg: '<svg viewBox="0 0 24 24"><path d="M12 22a2.98 2.98 0 0 1-2.9-2h5.8a2.98 2.98 0 0 1-2.9 2zm9-3V9c0-4.97-4.03-9-9-9S3 4.03 3 9v7l-2 2v1h22v-1l-2-2z"/></svg>'},
-            'Mantenimiento': { bg: 'rgb(255, 245, 210)', icon: '#FF9500', text: '#540', svg: '<svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.5 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>'},
-            'Seguridad': { bg: 'rgb(255, 230, 230)', icon: '#FF3B30', text: '#600', svg: '<svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12h-7V6.3l7-3.11v8.8z"/></svg>'},
-            'Visitas': { bg: 'rgb(230, 250, 230)', icon: '#34C759', text: '#030', svg: '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'},
-            'Pentano': { bg: 'rgb(250, 235, 255)', icon: '#AF52DE', text: '#303', svg: '<svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-2 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>'},
-            'Empty': { bg: 'rgb(235, 245, 255)', icon: '#007297', text: '#007297', svg: '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>'}
+            'Urgente': { bg: 'rgb(255, 230, 230)', icon: '#FF3B30' },
+            'Celebracion': { bg: 'transparent', icon: '#FF2D55' },
+            'Aviso': { bg: 'rgb(225, 240, 255)', icon: '#007AFF' },
+            'Mantenimiento': { bg: 'rgb(255, 245, 210)', icon: '#FF9500' },
+            'Seguridad': { bg: 'rgb(255, 230, 230)', icon: '#FF3B30' },
+            'Visitas': { bg: 'rgb(230, 250, 230)', icon: '#34C759' },
+            'Pentano': { bg: 'rgb(250, 235, 255)', icon: '#AF52DE' },
+            'Empty': { bg: 'rgb(235, 245, 255)', icon: '#007297' }
         };
+
+        let activeCelebrations = false;
+
+        async function fetchCelebrations() {
+            try {
+                const response = await fetch(CELEB_SHEET_URL);
+                const csvText = await response.text();
+                const rows = csvText.split('\n').map(row => row.split(','));
+                const today = new Date();
+                const day = today.getDate();
+                const month = today.getMonth() + 1;
+                const year = today.getFullYear();
+                let celebrations = [];
+
+                for (let i = 1; i < rows.length; i++) {
+                    const [nombre, apellido, nacimiento, incorporacion, msgCumple, msgAniv, msgBienvenida] = rows[i];
+                    if (!nombre) continue;
+                    const fullName = `${nombre.trim()} ${apellido ? apellido.trim() : ''}`.toUpperCase();
+                    const parseDate = (str) => {
+                        if (!str) return null;
+                        const parts = str.split('/');
+                        return { d: parseInt(parts[0]), m: parseInt(parts[1]), y: parseInt(parts[2]) };
+                    };
+                    const dateNac = parseDate(nacimiento);
+                    const dateInc = parseDate(incorporacion);
+
+                    if (dateNac && dateNac.d === day && dateNac.m === month) {
+                        celebrations.push({ 
+                            titulo: `🎂 ¡FELIZ CUMPLEAÑOS, ${fullName}!`, 
+                            msg: msgCumple || `¡Hoy celebramos tu día! Que pases una jornada excelente. 🥳✨`, 
+                            cat: 'Celebracion', subCat: 'Cumple' 
+                        });
+                    }
+                    if (dateInc && dateInc.d === day && dateInc.m === month) {
+                        if (dateInc.y === year) {
+                            celebrations.push({ 
+                                titulo: `🚀 ¡BIENVENIDO/A, ${fullName}!`, 
+                                msg: msgBienvenida || `¡Damos la bienvenida oficial a nuestro equipo! ¡A por todas! 👏🔥`, 
+                                cat: 'Celebracion', subCat: 'Bienvenida' 
+                            });
+                        } else {
+                            const años = year - dateInc.y;
+                            celebrations.push({ 
+                                titulo: `🎖️ ¡ANIVERSARIO DE ${fullName}!`, 
+                                msg: msgAniv || `Hoy cumple ${años} años con nosotros en Isopan. ¡Gracias por estar aquí! 🥂💙`, 
+                                cat: 'Celebracion', subCat: 'Aniversario' 
+                            });
+                        }
+                    }
+                }
+                activeCelebrations = celebrations.length > 0;
+                return celebrations;
+            } catch (e) { return []; }
+        }
 
         async function checkSheet() {
             try {
@@ -117,50 +199,29 @@
                 
                 let allNotifs = [];
                 const hoy = new Date(); hoy.setHours(0,0,0,0);
-                const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
 
                 rows.forEach((row, index) => {
                     const c = row.c;
                     if (!c || (c[5]?.v || "").toString().toUpperCase() !== "SI") return;
-                    
-                    let etiquetaFecha = c[3]?.f || "";
-                    let fechaObjeto = null;
-                    let timestamp = 9999999999999; // Para las que no tienen fecha, mandarlas al final
-
+                    let fechaAviso = null;
                     if (c[3]?.v) {
-                        fechaObjeto = eval("new " + c[3].v);
-                        fechaObjeto.setHours(0,0,0,0);
-                        timestamp = fechaObjeto.getTime();
+                        const d = eval("new " + c[3].v);
+                        fechaAviso = new Date(d.getFullYear(), d.getMonth(), d.getDate());
                     }
-
-                    if (fechaObjeto && fechaObjeto < hoy) return; 
-
-                    if (fechaObjeto) {
-                        if (fechaObjeto.getTime() === hoy.getTime()) etiquetaFecha = "HOY";
-                        else if (fechaObjeto.getTime() === manana.getTime()) etiquetaFecha = "MAÑANA";
-                    }
-
+                    if (fechaAviso && fechaAviso < hoy) return;
+                    let etiquetaFecha = c[3]?.f || "", esHoy = (fechaAviso && fechaAviso.getTime() === hoy.getTime());
+                    if (esHoy) etiquetaFecha = "HOY";
                     let catTexto = (c[2]?.v || "").toString();
                     let categoria = catTexto.includes("Urgen") ? "Urgente" : (catTexto.includes("Mante") ? "Mantenimiento" : (catTexto.includes("Visita") ? "Visitas" : (catTexto.includes("Seguri") ? "Seguridad" : (catTexto.includes("Penta") ? "Pentano" : "Aviso"))));
-                    
-                    allNotifs.push({ 
-                        id: `notif-${index}`, 
-                        titulo: c[0]?.v || "Aviso", 
-                        msg: c[1]?.v || "", 
-                        cat: categoria, 
-                        fecha: etiquetaFecha, 
-                        hora: c[4]?.f || "", 
-                        esNuevo: (etiquetaFecha === "HOY"),
-                        ts: timestamp // Guardamos el tiempo para ordenar
-                    });
+                    allNotifs.push({ id: `notif-${index}`, titulo: c[0]?.v || "Aviso", msg: c[1]?.v || "", cat: categoria, fecha: etiquetaFecha, hora: c[4]?.f || "", esNuevo: esHoy });
                 });
 
-                // ORDENACIÓN: 1º Urgentes, 2º Por fecha más cercana (ts)
-                allNotifs.sort((a, b) => {
-                    if (a.cat === 'Urgente' && b.cat !== 'Urgente') return -1;
-                    if (a.cat !== 'Urgente' && b.cat === 'Urgente') return 1;
-                    return a.ts - b.ts; // Orden cronológico ascendente
+                const celebEvents = await fetchCelebrations();
+                celebEvents.forEach((celeb, idx) => {
+                    allNotifs.push({ id: `celeb-${idx}`, ...celeb, fecha: "HOY", esNuevo: true });
                 });
+
+                allNotifs.sort((a, b) => (a.cat === 'Urgente' ? -1 : (b.cat === 'Urgente' ? 1 : (a.cat === 'Celebracion' ? -1 : 1))));
 
                 const container = document.getElementById('main-container');
                 if (allNotifs.length > 0 && allNotifs[0].cat === 'Urgente') container.classList.add('has-urgent');
@@ -181,6 +242,17 @@
             } catch (e) { console.error(e); }
         }
 
+        function launchConfetti() {
+            if (!activeCelebrations) return;
+            confetti({ 
+                particleCount: 60, 
+                spread: 70, 
+                origin: { y: 0.7 },
+                ticks: 250,
+                colors: ['#2a6f8f', '#9cbd68', '#ff2d55', '#ffd700']
+            });
+        }
+
         function updateOrCreate(container, id, data, isEmpty, index) {
             let el = document.getElementById(id);
             const tema = assets[data.cat];
@@ -190,30 +262,45 @@
                 container.appendChild(el);
                 setTimeout(() => el.classList.add('show'), 120 * index);
             }
-            el.style.order = index; // Importante para mantener el orden visual
+            el.style.order = index;
             el.style.backgroundColor = tema.bg;
-            el.classList.remove('urgente-glow', 'active-glow');
-            if (data.cat === 'Urgente') el.classList.add('urgente-glow');
+            el.classList.remove('urgente-glow', 'active-glow', 'celeb-special');
+            
+            const iconContainer = el.querySelector('.app-icon');
+            iconContainer.style.backgroundColor = tema.icon;
+            
+            if (data.cat === 'Urgente') {
+                el.classList.add('urgente-glow');
+                iconContainer.innerHTML = SVGS['Urgente'];
+            } 
+            else if (data.cat === 'Celebracion') {
+                el.classList.add('celeb-special');
+                if (data.subCat === 'Cumple') iconContainer.innerHTML = "🎂";
+                else if (data.subCat === 'Bienvenida') iconContainer.innerHTML = "🚀";
+                else if (data.subCat === 'Aniversario') iconContainer.innerHTML = "🎖️";
+            } 
             else if (!isEmpty) { 
                 el.classList.add('active-glow'); 
-                el.style.setProperty('--glow-color', tema.icon + '60'); 
+                el.style.setProperty('--glow-color', tema.icon + '60');
+                iconContainer.innerHTML = SVGS[data.cat] || SVGS['Aviso'];
+            } else {
+                iconContainer.innerHTML = SVGS['Empty'];
             }
-            const icon = el.querySelector('.app-icon');
-            icon.style.backgroundColor = tema.icon; icon.innerHTML = tema.svg;
-            el.querySelector('.title').innerText = data.titulo; el.querySelector('.title').style.color = tema.text;
+
+            el.querySelector('.title').innerText = data.titulo;
             el.querySelector('.message').innerText = data.msg;
-            el.querySelector('.new-indicator-dot').style.display = (data.esNuevo && data.cat !== 'Urgente') ? 'block' : 'none';
+            el.querySelector('.new-indicator-dot').style.display = (data.esNuevo && data.cat !== 'Urgente' && data.cat !== 'Celebracion') ? 'block' : 'none';
             
             const badge = el.querySelector('.date-badge');
-            if (data.fecha) { 
-                badge.style.display = 'block'; 
-                badge.innerText = `${data.fecha}${data.hora ? ' | ' + data.hora : ''}`; 
-                badge.style.color = tema.text; 
-            } else badge.style.display = 'none';
+            if (data.fecha) { badge.style.display = 'block'; badge.innerText = `${data.fecha}${data.hora ? ' | ' + data.hora : ''}`; }
+            else badge.style.display = 'none';
         }
 
-        setInterval(checkSheet, 5000);
+        setInterval(checkSheet, 15000);
+        setInterval(launchConfetti, 30000);
+        
         checkSheet();
+        setTimeout(launchConfetti, 2000);
     </script>
 </body>
 </html>
