@@ -48,14 +48,12 @@
 
         .celeb-special { 
             background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 40%, #a1c4fd 80%, #c2e9fb 100%) !important; 
-            min-height: 140px;
-            border: 2px solid #fff !important;
+            min-height: 140px; border: 2px solid #fff !important;
         }
 
         .urgente-special { 
             background: #ff4b42 !important; 
-            min-height: 140px;
-            border: 2px solid #fff !important;
+            min-height: 140px; border: 2px solid #fff !important;
         }
 
         .title { color: #1a1a1a; font-weight: 800; font-size: 22px; letter-spacing: -0.6px; }
@@ -81,14 +79,11 @@
         
         .content { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; z-index: 2; }
         
-        /* BADGE DE FECHA Y HORA MÁS GRANDE */
         .date-badge {
             display: none;
             font-size: 18px; font-weight: 900; padding: 12px 24px; border-radius: 16px;
             background: rgba(255, 255, 255, 0.95);
-            color: #1a1a1a;
-            text-transform: uppercase;
-            white-space: nowrap;
+            color: #1a1a1a; text-transform: uppercase; white-space: nowrap;
             box-shadow: 0 4px 8px rgba(0,0,0,0.05);
         }
         .date-badge:not(:empty) { display: block; }
@@ -112,9 +107,7 @@
             'Visitas': '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>',
             'Pentano': '<svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-2 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>',
             'Check': '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
-            'Star': '<svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>',
-            'Heart': '<svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>',
-            'Bolt': '<svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>'
+            'Star': '<svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>'
         };
 
         const assets = {
@@ -134,7 +127,6 @@
             const mañana = new Date(hoy); mañana.setDate(hoy.getDate() + 1);
 
             try {
-                // 1. Notificaciones normales
                 const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&refresh=${Date.now()}`;
                 const res = await fetch(url);
                 const text = await res.text();
@@ -143,37 +135,41 @@
                 json.table.rows.forEach((row, idx) => {
                     const c = row.c;
                     if (c && (c[5]?.v || "").toString().toUpperCase() === "SI") {
-                        let f = c[3]?.v ? new Date(eval("new " + c[3].v)) : null;
-                        let hText = c[4]?.f || ""; // Formato "HH:mm"
-                        
+                        let fVal = c[3]?.v;
+                        let hText = c[4]?.f || "";
+                        let f = fVal ? new Date(eval("new " + fVal)) : null;
+
                         if (f) {
                             f.setHours(0, 0, 0, 0);
-                            
-                            // Validar si la hora ya pasó para el día de hoy
+                            // Expiración para HOY si ya pasó la hora
                             if (f.getTime() === hoy.getTime() && hText) {
                                 const [hrs, mins] = hText.split(':').map(Number);
                                 const fHora = new Date(hoy); fHora.setHours(hrs, mins, 0);
-                                if (ahora > fHora) return; // Si ya pasó la hora, saltar esta notif
+                                if (ahora > fHora) return; 
                             }
-
-                            if (f >= hoy) {
-                                let label = "";
-                                if (f.getTime() === hoy.getTime()) label = "HOY";
-                                else if (f.getTime() === mañana.getTime()) label = "MAÑANA";
-                                else label = c[3]?.f || "";
-
-                                const fullBadge = hText ? `${label} | ${hText}` : label;
-                                
-                                let catTexto = (c[2]?.v || "").toString();
-                                let categoria = catTexto.includes("Urgen") ? "Urgente" : (catTexto.includes("Mante") ? "Mantenimiento" : (catTexto.includes("Visita") ? "Visitas" : (catTexto.includes("Seguri") ? "Seguridad" : (catTexto.includes("Penta") ? "Pentano" : "Aviso"))));
-                                
-                                items.push({ id: `n-${idx}`, title: c[0]?.v || "Aviso", msg: c[1]?.v || "", cat: categoria, badge: fullBadge });
-                            }
+                            // No mostrar si ya es un día pasado
+                            if (f < hoy) return; 
                         }
+
+                        let label = "";
+                        if (f) {
+                            const timeDiff = f.getTime() - hoy.getTime();
+                            const dayDiff = Math.round(timeDiff / (1000 * 3600 * 24));
+
+                            if (dayDiff === 0) label = "HOY";
+                            else if (dayDiff === 1) label = "MAÑANA";
+                            else label = c[3]?.f || "";
+                        }
+
+                        const fullBadge = hText ? (label ? `${label} | ${hText}` : hText) : label;
+                        let catTexto = (c[2]?.v || "").toString();
+                        let categoria = catTexto.includes("Urgen") ? "Urgente" : (catTexto.includes("Mante") ? "Mantenimiento" : (catTexto.includes("Visita") ? "Visitas" : (catTexto.includes("Seguri") ? "Seguridad" : (catTexto.includes("Penta") ? "Pentano" : "Aviso"))));
+                        
+                        items.push({ id: `n-${idx}`, title: c[0]?.v || "Aviso", msg: c[1]?.v || "", cat: categoria, badge: fullBadge });
                     }
                 });
 
-                // 2. Celebraciones (siempre HOY)
+                // Celebraciones
                 const cRes = await fetch(`${CELEB_SHEET_URL}&t=${Date.now()}`);
                 const cText = await cRes.text();
                 const cRows = cText.split('\n').map(r => r.split(','));
@@ -181,14 +177,9 @@
                     const [nom, ape, nac, inc] = cRows[i];
                     if (!nom) continue;
                     const full = `${nom.trim()} ${ape ? ape.trim() : ''}`.toUpperCase();
-                    const dN = nac?.split('/'); const dI = inc?.split('/');
-                    if (dN && parseInt(dN[0]) === hoy.getDate() && parseInt(dN[1]) === (hoy.getMonth()+1)) {
+                    const dN = nac?.split('/');
+                    if (dN && parseInt(dN[0]) === ahora.getDate() && parseInt(dN[1]) === (ahora.getMonth()+1)) {
                         items.push({ id: `c-n-${i}`, title: `MUCHAS FELICIDADES, ${full}`, msg: "Hoy es tu gran día. Todo el equipo te desea un año lleno de alegrías. Disfrútalo.", cat: "Celebracion", sub: "Star", badge: "HOY" });
-                    }
-                    if (dI && parseInt(dI[0]) === hoy.getDate() && parseInt(dI[1]) === (hoy.getMonth()+1)) {
-                        const años = hoy.getFullYear() - parseInt(dI[2]);
-                        if (años > 0) items.push({ id: `c-a-${i}`, title: `FELIZ ANIVERSARIO, ${full}`, msg: `Increíble. Ya sumas ${años} años con nosotros. Gracias por tu entrega diaria.`, cat: "Celebracion", sub: "Heart", badge: "HOY" });
-                        else items.push({ id: `c-b-${i}`, title: `BIENVENIDO/A AL EQUIPO, ${full}`, msg: "Hoy comienzas tu camino con nosotros. Estamos encantados de que formes parte de esta familia.", cat: "Celebracion", sub: "Bolt", badge: "HOY" });
                     }
                 }
 
@@ -235,7 +226,6 @@
             });
         }
         
-        // Actualización frecuente para controlar la expiración por minutos
         setInterval(updateDashboard, 15000);
         updateDashboard();
     </script>
