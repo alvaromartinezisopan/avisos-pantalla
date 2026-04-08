@@ -46,7 +46,6 @@
         }
         .notif-card.show { transform: translateX(0); opacity: 1; }
 
-        /* ESTILO GRANDE PARA CELEBRACIÓN Y URGENTE */
         .celeb-special, .urgente-special {
             min-height: 140px !important;
             border: 2px solid #fff !important;
@@ -69,10 +68,8 @@
 
         .celeb-special .title, .urgente-special .title { font-weight: 900 !important; font-size: 26px !important; color: #1a1a1a; }
         .celeb-special .message, .urgente-special .message { font-weight: 700 !important; font-size: 20px !important; color: #333; }
-        
         .urgente-special .title, .urgente-special .message { color: white !important; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
 
-        /* ANIMACIÓN RADAR LENTA */
         .urgente-special .app-icon::after, .urgente-special .app-icon::before {
             content: '';
             position: absolute;
@@ -90,7 +87,6 @@
             100% { transform: scale(2.8); opacity: 0; }
         }
 
-        /* Texto para tarjetas normales */
         .title { color: #1a1a1a; font-weight: 800; font-size: 22px; letter-spacing: -0.6px; }
         .message { color: #333; font-size: 18px; line-height: 1.3; font-weight: 600; }
 
@@ -106,10 +102,11 @@
         
         .content { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; z-index: 2; }
         
+        /* FECHA MÁS GRANDE */
         .date-badge {
             display: none;
-            font-size: 13px; font-weight: 900; padding: 8px 16px; border-radius: 14px;
-            background: rgba(255, 255, 255, 0.85);
+            font-size: 16px; font-weight: 900; padding: 10px 20px; border-radius: 14px;
+            background: rgba(255, 255, 255, 0.9);
             color: #1a1a1a;
             text-transform: uppercase;
             box-shadow: 0 2px 6px rgba(0,0,0,0.08);
@@ -165,9 +162,7 @@
                     const [nombre, apellido, nacimiento, incorporacion, msgCumple, msgAniv, msgBienvenida] = rows[i];
                     if (!nombre) continue;
                     
-                    const firstName = nombre.trim().toUpperCase();
-                    const lastName = apellido ? apellido.trim().toUpperCase() : '';
-                    const fullName = `${firstName} ${lastName}`.trim();
+                    const fullName = `${nombre.trim()} ${apellido ? apellido.trim() : ''}`.toUpperCase();
                     
                     const parseDate = (str) => {
                         if (!str) return null;
@@ -177,37 +172,22 @@
                     const dateNac = parseDate(nacimiento);
                     const dateInc = parseDate(incorporacion);
 
-                    // CUMPLEAÑOS
                     if (dateNac && dateNac.d === day && dateNac.m === month) {
                         celebrations.push({ 
-                            titulo: `¡MUCHAS FELICIDADES, ${fullName}!`, 
-                            msg: msgCumple || `¡Hoy es tu gran día! Todo el equipo te desea un año lleno de éxitos y alegrías. ¡Disfrútalo!`, 
+                            titulo: `MUCHAS FELICIDADES, ${fullName}`, 
+                            msg: msgCumple || `Hoy es tu gran día. Todo el equipo te desea un año lleno de éxitos y alegrías. Disfrútalo.`, 
                             cat: 'Celebracion', subCat: 'Cumple' 
                         });
                     }
 
-                    // ANIVERSARIO O BIENVENIDA
                     if (dateInc && dateInc.d === day && dateInc.m === month) {
                         if (msgBienvenida && msgBienvenida.trim() !== "") {
-                            celebrations.push({ 
-                                titulo: `¡BIENVENIDO/A, ${fullName}!`, 
-                                msg: msgBienvenida, 
-                                cat: 'Celebracion', subCat: 'Bienvenida' 
-                            });
+                            celebrations.push({ titulo: `BIENVENIDO/A AL EQUIPO, ${fullName}`, msg: msgBienvenida, cat: 'Celebracion', subCat: 'Bienvenida' });
                         } else if (dateInc.y === year) {
-                            celebrations.push({ 
-                                titulo: `¡QUÉ ALEGRÍA TENERTE, ${fullName}!`, 
-                                msg: `Hoy comienzas tu camino con nosotros. ¡Estamos encantados de que formes parte de esta gran familia!`, 
-                                cat: 'Celebracion', subCat: 'Bienvenida' 
-                            });
+                            celebrations.push({ titulo: `QUÉ ALEGRÍA TENERTE, ${fullName}`, msg: `Hoy comienzas tu camino con nosotros. Estamos encantados de que formes parte de esta familia.`, cat: 'Celebracion', subCat: 'Bienvenida' });
                         } else {
                             const años = year - dateInc.y;
-                            const plural = años === 1 ? "año" : "años";
-                            celebrations.push({ 
-                                titulo: `¡FELIZ ANIVERSARIO, ${fullName}!`, 
-                                msg: msgAniv || `¡Increíble! Ya sumas ${años} ${plural} con nosotros. Gracias por tu entrega y por hacer este equipo mejor cada día.`, 
-                                cat: 'Celebracion', subCat: 'Aniversario' 
-                            });
+                            celebrations.push({ titulo: `FELIZ ANIVERSARIO, ${fullName}`, msg: msgAniv || `Increíble. Ya sumas ${años} años con nosotros. Gracias por tu entrega diaria.`, cat: 'Celebracion', subCat: 'Aniversario' });
                         }
                     }
                 }
@@ -225,10 +205,12 @@
                 
                 let allNotifs = [];
                 const hoy = new Date(); hoy.setHours(0,0,0,0);
+                const mañana = new Date(hoy); mañana.setDate(mañana.getDate() + 1);
 
                 rows.forEach((row, index) => {
                     const c = row.c;
                     if (!c || (c[5]?.v || "").toString().toUpperCase() !== "SI") return;
+                    
                     let fechaAviso = null;
                     if (c[3]?.v) {
                         const d = eval("new " + c[3].v);
@@ -236,7 +218,13 @@
                     }
                     if (fechaAviso && fechaAviso < hoy) return;
                     
-                    let etiquetaFecha = (fechaAviso && fechaAviso.getTime() === hoy.getTime()) ? "HOY" : (c[3]?.f || "");
+                    let etiquetaFecha = "";
+                    if (fechaAviso) {
+                        if (fechaAviso.getTime() === hoy.getTime()) etiquetaFecha = "HOY";
+                        else if (fechaAviso.getTime() === mañana.getTime()) etiquetaFecha = "MAÑANA";
+                        else etiquetaFecha = c[3]?.f || "";
+                    }
+
                     let etiquetaHora = c[4]?.f || "";
                     let finalBadge = (etiquetaFecha && etiquetaHora) ? `${etiquetaFecha} | ${etiquetaHora}` : (etiquetaFecha || etiquetaHora);
 
@@ -247,7 +235,7 @@
 
                 const celebEvents = await fetchCelebrations();
                 celebEvents.forEach((celeb, idx) => {
-                    allNotifs.push({ id: `celeb-${idx}`, ...celeb, badgeText: "EVENTO ESPECIAL" });
+                    allNotifs.push({ id: `celeb-${idx}`, ...celeb, badgeText: "HOY" });
                 });
 
                 allNotifs.sort((a, b) => (a.cat === 'Urgente' ? -1 : (b.cat === 'Urgente' ? 1 : (a.cat === 'Celebracion' ? -1 : 1))));
