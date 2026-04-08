@@ -111,6 +111,7 @@
 
     <script>
         const SHEET_ID = '168DpGwqRcSsXtJoGPNqzJtHhtjjfFtrpcqLnnKq8CIY';
+        // Base de la URL de celebraciones
         const CELEB_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSSadkiXq6jUCVSyiHwtutKKXkP3gxIFJmmHRJfnaLqYFxMJOYcNOU6SLURm2g090_DAK18G1Gtb7Ux/pub?output=csv';
 
         const SVGS = {
@@ -138,7 +139,8 @@
 
         async function fetchCelebrations() {
             try {
-                const response = await fetch(CELEB_SHEET_URL);
+                // Forzamos actualización de datos con &t=timestamp
+                const response = await fetch(`${CELEB_SHEET_URL}&t=${Date.now()}`);
                 const csvText = await response.text();
                 const rows = csvText.split('\n').map(row => row.split(','));
                 const today = new Date();
@@ -175,7 +177,6 @@
                             });
                         } else {
                             const años = year - dateInc.y;
-                            // CORRECCIÓN SINGULAR/PLURAL AQUÍ
                             const textoAños = años === 1 ? "1 año" : `${años} años`;
                             
                             celebrations.push({ 
@@ -238,7 +239,10 @@
 
                 const activeIds = allNotifs.length === 0 ? ['empty'] : allNotifs.map(d => d.id);
                 document.querySelectorAll('.notif-card').forEach(n => {
-                    if(!activeIds.includes(n.id)) { n.classList.remove('show'); setTimeout(() => n.remove(), 700); }
+                    if(!activeIds.includes(n.id)) { 
+                        n.classList.remove('show'); 
+                        setTimeout(() => n.remove(), 700); 
+                    }
                 });
 
             } catch (e) { console.error(e); }
