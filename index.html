@@ -79,7 +79,6 @@
             text-transform: uppercase; white-space: nowrap;
         }
 
-        /* DISEÑO CELEBRACIONES */
         .celeb-special {
             min-height: 125px !important;
             padding: 24px 30px !important;
@@ -176,9 +175,12 @@
                             });
                         } else {
                             const años = year - dateInc.y;
+                            // CORRECCIÓN SINGULAR/PLURAL AQUÍ
+                            const textoAños = años === 1 ? "1 año" : `${años} años`;
+                            
                             celebrations.push({ 
                                 titulo: `¡ANIVERSARIO DE ${fullName}!`, 
-                                msg: msgAniv || `Hoy cumple ${años} años con nosotros en Isopan. ¡Gracias por estar aquí! 🥂💙`, 
+                                msg: msgAniv || `Hoy cumple ${textoAños} con nosotros en Isopan. ¡Gracias por estar aquí! 🥂💙`, 
                                 cat: 'Celebracion', subCat: 'Aniversario' 
                             });
                         }
@@ -244,16 +246,29 @@
 
         function launchConfetti() {
             if (!activeCelebrations) return;
-            // Configuración para que caiga desde arriba
-            confetti({ 
-                particleCount: 100, 
-                spread: 120, 
-                origin: { y: -0.1, x: 0.5 }, // Sale ligeramente fuera de la pantalla por arriba
-                gravity: 0.8,
-                scalar: 1.2,
-                ticks: 300,
+            
+            const duration = 3000; 
+            const animationEnd = Date.now() + duration;
+            const defaults = { 
+                startVelocity: 30, spread: 360, ticks: 300, zIndex: 0,
+                gravity: 0.6, scalar: 1.2,
                 colors: ['#2a6f8f', '#9cbd68', '#ff2d55', '#ffd700']
-            });
+            };
+
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+
+            const interval = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+                const particleCount = 20 * (timeLeft / duration);
+                
+                confetti(Object.assign({}, defaults, { 
+                    particleCount, origin: { x: randomInRange(0.1, 0.3), y: -0.2 } 
+                }));
+                confetti(Object.assign({}, defaults, { 
+                    particleCount, origin: { x: randomInRange(0.7, 0.9), y: -0.2 } 
+                }));
+            }, 250);
         }
 
         function updateOrCreate(container, id, data, isEmpty, index) {
