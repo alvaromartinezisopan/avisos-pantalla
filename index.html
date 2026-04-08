@@ -32,7 +32,7 @@
             position: relative;
             width: 100%; 
             border-radius: 25px;
-            display: flex; align-items: center; gap: 22px; /* Más espacio entre icono y texto */
+            display: flex; align-items: center; gap: 22px;
             padding: 22px 30px; 
             box-sizing: border-box;
             border: 1px solid rgba(255,255,255,0.8);
@@ -46,55 +46,71 @@
         }
         .notif-card.show { transform: translateX(0); opacity: 1; }
 
-        /* CELEBRACIÓN LIMPIA */
-        .celeb-special {
+        /* ESTILO GRANDE PARA CELEBRACIÓN Y URGENTE */
+        .celeb-special, .urgente-special {
             min-height: 140px !important;
             border: 2px solid #fff !important;
+        }
+
+        .celeb-special {
             background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 40%, #a1c4fd 80%, #c2e9fb 100%) !important;
         }
 
-        .celeb-special .app-icon { 
+        .urgente-special {
+            background: #ff4b42 !important;
+        }
+
+        .celeb-special .app-icon, .urgente-special .app-icon { 
             width: 75px; height: 75px; 
             background: white !important; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            z-index: 5;
         }
-        
-        .celeb-special .title { font-weight: 900 !important; font-size: 26px !important; color: #1a1a1a; }
-        .celeb-special .message { font-weight: 700 !important; font-size: 20px !important; color: #333; }
 
-        /* Texto para tarjetas normales (MÁS GRANDES) */
-        .title { 
-            color: #1a1a1a; 
-            font-weight: 800; 
-            font-size: 22px; /* Subido de 19px */
-            letter-spacing: -0.6px; 
+        .celeb-special .title, .urgente-special .title { font-weight: 900 !important; font-size: 26px !important; color: #1a1a1a; }
+        .celeb-special .message, .urgente-special .message { font-weight: 700 !important; font-size: 20px !important; color: #333; }
+        
+        .urgente-special .title, .urgente-special .message { color: white !important; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+
+        /* ANIMACIÓN RADAR LENTA (6s para evitar lag) */
+        .urgente-special .app-icon::after, .urgente-special .app-icon::before {
+            content: '';
+            position: absolute;
+            width: 75px; height: 75px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.4);
+            animation: radar 6s ease-out infinite;
+            z-index: -1;
+            pointer-events: none;
         }
-        .message { 
-            color: #333; 
-            font-size: 18px; /* Subido de 16px */
-            line-height: 1.3; 
-            font-weight: 600; 
+        .urgente-special .app-icon::after { animation-delay: 3s; }
+
+        @keyframes radar {
+            0% { transform: scale(1); opacity: 0.6; }
+            100% { transform: scale(2.8); opacity: 0; }
         }
+
+        /* Texto para tarjetas normales */
+        .title { color: #1a1a1a; font-weight: 800; font-size: 22px; letter-spacing: -0.6px; }
+        .message { color: #333; font-size: 18px; line-height: 1.3; font-weight: 600; }
 
         .app-icon {
+            position: relative;
             width: 55px; height: 55px; border-radius: 16px;
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
         }
         .app-icon svg { width: 34px; height: 34px; fill: white; }
         .celeb-special .app-icon svg { width: 42px; height: 42px; fill: #ff2d55; }
+        .urgente-special .app-icon svg { width: 42px; height: 42px; fill: #ff4b42; }
         
         .content { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; z-index: 2; }
         
-        /* FECHA Y HORA (MÁS GRANDES Y VISIBLES) */
         .date-badge {
             display: none;
-            font-size: 13px; /* Subido de 11px */
-            font-weight: 900; 
-            padding: 8px 16px; 
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.85); /* Más opaco */
-            color: #1a1a1a; /* Texto más oscuro para contraste */
+            font-size: 13px; font-weight: 900; padding: 8px 16px; border-radius: 14px;
+            background: rgba(255, 255, 255, 0.85);
+            color: #1a1a1a;
             text-transform: uppercase;
             box-shadow: 0 2px 6px rgba(0,0,0,0.08);
             white-space: nowrap;
@@ -125,7 +141,7 @@
         };
 
         const assets = {
-            'Urgente': { bg: '#ffd6d6', icon: '#ff3b30' },
+            'Urgente': { bg: '#ff4b42', icon: '#ff3b30' },
             'Celebracion': { bg: 'transparent', icon: '#FF2D55' },
             'Aviso': { bg: '#d4eaff', icon: '#007aff' },
             'Mantenimiento': { bg: '#fff0cc', icon: '#ff9500' },
@@ -167,8 +183,7 @@
                             celebrations.push({ titulo: `BIENVENIDO/A, ${fullName}`, msg: `Te damos la bienvenida a nuestro equipo.`, cat: 'Celebracion', subCat: 'Bienvenida' });
                         } else {
                             const años = year - dateInc.y;
-                            const textoAños = años === 1 ? "1 año" : `${años} años`;
-                            celebrations.push({ titulo: `ANIVERSARIO DE ${fullName}`, msg: msgAniv || `Hoy cumple ${textoAños} con nosotros. Gracias por estar aquí.`, cat: 'Celebracion', subCat: 'Aniversario' });
+                            celebrations.push({ titulo: `ANIVERSARIO DE ${fullName}`, msg: msgAniv || `Hoy cumple ${años} años con nosotros. Gracias por estar aquí.`, cat: 'Celebracion', subCat: 'Aniversario' });
                         }
                     }
                 }
@@ -235,9 +250,10 @@
             el.style.order = index;
             el.style.backgroundColor = tema.bg;
             el.classList.toggle('celeb-special', data.cat === 'Celebracion');
+            el.classList.toggle('urgente-special', data.cat === 'Urgente');
             
             const iconContainer = el.querySelector('.app-icon');
-            iconContainer.style.backgroundColor = (data.cat === 'Celebracion') ? 'transparent' : tema.icon;
+            iconContainer.style.backgroundColor = (data.cat === 'Celebracion' || data.cat === 'Urgente') ? 'white' : tema.icon;
             
             if (data.cat === 'Celebracion') {
                 if (data.subCat === 'Cumple') iconContainer.innerHTML = SVGS['Estrella'];
