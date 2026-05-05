@@ -202,7 +202,7 @@
                         const aniosCumplidos = ahora.getFullYear() - parseInt(dI[2]);
                         if (aniosCumplidos > 0) {
                             const textoAnio = aniosCumplidos === 1 ? "año" : "años";
-                            items.push({ id: `c-a-${i}`, title: `¡FELIZ ANIVERSARIO, ${full}!`, role: cargo, msg: `Increíble. Hoy cumples ${aniosCumplidos} ${textoAnio} con nosotros. Gracias por tu compromiso diario.`, cat: "Celebracion", sub: "Heart", badge: "HOY" });
+                            items.push({ id: `c-a-${i}`, title: `¡FELIZ ANIVERSARIO, ${full}!`, role: cargo, msg: `Hoy cumples ${aniosCumplidos} ${textoAnio} con nosotros. Gracias por tu compromiso diario.`, cat: "Celebracion", sub: "Heart", badge: "HOY" });
                         } else {
                             items.push({ id: `c-b-${i}`, title: `¡BIENVENIDO/A, ${full}!`, role: cargo, msg: "Estamos encantados de tenerte en el equipo. ¡A por todas!", cat: "Celebracion", sub: "Bolt", badge: "HOY" });
                         }
