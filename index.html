@@ -100,6 +100,41 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.05); z-index: 2; position: relative;
         }
         .date-badge:not(:empty) { display: block; }
+      /* ==================================================================
+   EFECTO GLOW EXCLUSIVO PARA CELEBRACIONES (Cumpleaños, Aniversarios y Bienvenidas)
+   ================================================================== */
+
+/* 1. Hacemos que la tarjeta permita sobresalir al aura y limpiamos su contenedor */
+.celeb-special {
+    background: transparent !important;
+    overflow: visible !important;
+    border: none !important;
+    min-height: 140px;
+}
+
+/* 2. CAPA INTERIOR (::after): Mantiene el fondo degradado pastel original 100% intacto */
+.celeb-special::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, #ffebf0 0%, #fff3e6 50%, #e6f0ff 100%);
+    border: 2px solid #fff;
+    border-radius: 25px;
+    z-index: -1; /* Se interpone sobre el aura protegiendo el interior */
+}
+
+/* 3. CAPA EXTERIOR (::before): El aura multicolor que solo es visible por fuera del borde */
+.celeb-special::before {
+    content: '';
+    position: absolute;
+    /* Controla el grosor del aura (salientes hacia afuera) */
+    top: -5px; left: -5px; right: -5px; bottom: -5px; 
+    background: linear-gradient(115deg, #00e1ff, #7d2ae8, #ff007b, #ffea00);
+    border-radius: 33px; /* Mantiene la proporción de las esquinas */
+    filter: blur(12px);  /* Difuminado suave del brillo */
+    opacity: 0.9;
+    z-index: -2; /* Se posiciona completamente detrás de la tarjeta */
+}
     </style>
 </head>
 <body>
