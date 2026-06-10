@@ -239,16 +239,16 @@
                     const cargo = puesto ? puesto.trim() : "";
 
                     if (dN && parseInt(dN[0]) === ahora.getDate() && parseInt(dN[1]) === (ahora.getMonth()+1)) {
-                        items.push({ id: `c-n-${i}`, title: `¡MUCHAS FELICIDADES, ${full}!`, role: cargo, msg: "Todo el equipo de Isopan Ibérica te desea un día excelente.", cat: "Celebracion", sub: "Star", badge: "HOY" });
+                        items.push({ id: `c-n-${i}`, title: `¡FELICIDADES, ${full}!`, role: cargo, msg: "Todo el equipo de Isopan Ibérica te desea un día excelente.", cat: "Celebracion", sub: "Star", badge: "HOY" });
                     }
 
                     if (dI && parseInt(dI[0]) === ahora.getDate() && parseInt(dI[1]) === (ahora.getMonth()+1)) {
                         const aniosCumplidos = ahora.getFullYear() - parseInt(dI[2]);
                         if (aniosCumplidos > 0) {
                             const textoAnio = aniosCumplidos === 1 ? "año" : "años";
-                            items.push({ id: `c-a-${i}`, title: `¡FELIZ ANIVERSARIO, ${full}!`, role: cargo, msg: `Hoy cumples ${aniosCumplidos} ${textoAnio} con nosotros. Gracias por tu compromiso diario.`, cat: "Celebracion", sub: "Heart", badge: "HOY" });
+                            items.push({ id: `c-a-${i}`, title: `¡${aniosCumplidos} ${textoAnio} en el equipo! Felicidades, ${full}`, role: cargo, msg: `Gracias por tu compromiso diario.`, cat: "Celebracion", sub: "Heart", badge: "HOY" });
                         } else {
-                            items.push({ id: `c-b-${i}`, title: `¡BIENVENIDO/A, ${full}!`, role: cargo, msg: "Estamos encantados de tenerte en el equipo. ¡A por todas!", cat: "Celebracion", sub: "Bolt", badge: "HOY" });
+                            items.push({ id: `c-b-${i}`, title: `¡BIENVENIDO/A, ${full}!`, role: cargo, msg: "Estamos encantados de tenerte en el equipo.", cat: "Celebracion", sub: "Bolt", badge: "HOY" });
                         }
                     }
                 }
