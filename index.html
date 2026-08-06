@@ -100,41 +100,38 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.05); z-index: 2; position: relative;
         }
         .date-badge:not(:empty) { display: block; }
+
       /* ==================================================================
    EFECTO GLOW EXCLUSIVO PARA CELEBRACIONES (Cumpleaños, Aniversarios y Bienvenidas)
    ================================================================== */
 
-/* 1. Hacemos que la tarjeta permita sobresalir al aura y limpiamos su contenedor */
-.celeb-special {
-    background: transparent !important;
-    overflow: visible !important;
-    border: none !important;
-    min-height: 140px;
-}
+        .celeb-special {
+            background: transparent !important;
+            overflow: visible !important;
+            border: none !important;
+            min-height: 140px;
+        }
 
-/* 2. CAPA INTERIOR (::after): Mantiene el fondo degradado pastel original 100% intacto */
-.celeb-special::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(135deg, #ffebf0 0%, #fff3e6 50%, #e6f0ff 100%);
-    border: 2px solid #fff;
-    border-radius: 25px;
-    z-index: -1; /* Se interpone sobre el aura protegiendo el interior */
-}
+        .celeb-special::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, #ffebf0 0%, #fff3e6 50%, #e6f0ff 100%);
+            border: 2px solid #fff;
+            border-radius: 25px;
+            z-index: -1; 
+        }
 
-/* 3. CAPA EXTERIOR (::before): El aura multicolor que solo es visible por fuera del borde */
-.celeb-special::before {
-    content: '';
-    position: absolute;
-    /* Controla el grosor del aura (salientes hacia afuera) */
-    top: -5px; left: -5px; right: -5px; bottom: -5px; 
-    background: linear-gradient(115deg, #00e1ff, #7d2ae8, #ff007b, #ffea00);
-    border-radius: 33px; /* Mantiene la proporción de las esquinas */
-    filter: blur(12px);  /* Difuminado suave del brillo */
-    opacity: 0.9;
-    z-index: -2; /* Se posiciona completamente detrás de la tarjeta */
-}
+        .celeb-special::before {
+            content: '';
+            position: absolute;
+            top: -5px; left: -5px; right: -5px; bottom: -5px; 
+            background: linear-gradient(115deg, #00e1ff, #7d2ae8, #ff007b, #ffea00);
+            border-radius: 33px; 
+            filter: blur(12px);  
+            opacity: 0.9;
+            z-index: -2; 
+        }
     </style>
 </head>
 <body>
@@ -146,6 +143,13 @@
     <script>
         const SHEET_ID = '168DpGwqRcSsXtJoGPNqzJtHhtjjfFtrpcqLnnKq8CIY';
         const CELEB_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSSadkiXq6jUCVSyiHwtutKKXkP3gxIFJmmHRJfnaLqYFxMJOYcNOU6SLURm2g090_DAK18G1Gtb7Ux/pub?output=csv';
+
+        // Opción manual para probar el error de conexión (true = fuerza error).
+        const SIMULAR_ERROR = false;
+
+        // MODIFICACIÓN: Guardamos la última lista válida descargada y el temporizador activo
+        let ultimosDatosValidos = [];
+        let temporizadorActualizacion = null;
 
         const SVGS = {
             'Aviso': '<svg viewBox="0 0 24 24"><path d="M12 22a2.98 2.98 0 0 1-2.9-2h5.8a2.98 2.98 0 0 1-2.9 2zm9-3V9c0-4.97-4.03-9-9-9S3 4.03 3 9v7l-2 2v1h22v-1l-2-2z"/></svg>',
@@ -173,12 +177,19 @@
         };
 
         async function updateDashboard() {
+            // Cancelamos cualquier temporizador previo antes de realizar la petición
+            if (temporizadorActualizacion) clearTimeout(temporizadorActualizacion);
+
             let items = [];
             const ahora = new Date();
             const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
             const mañana = new Date(hoy); mañana.setDate(hoy.getDate() + 1);
 
             try {
+                if (SIMULAR_ERROR) {
+                    throw new Error("Simulación de error de conexión activada manualmente.");
+                }
+
                 // 1. Notificaciones Normales
                 const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&refresh=${Date.now()}`;
                 const res = await fetch(url);
@@ -228,7 +239,7 @@
                 // 2. Celebraciones
                 const cRes = await fetch(`${CELEB_SHEET_URL}&t=${Date.now()}`);
                 const cText = await cRes.text();
-                const cRows = cText.split('\n').map(r => r.split(','));
+                const cRows = cText.split('\n').map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => val.replace(/^"|"$/g, '')));
 
                 for (let i = 1; i < cRows.length; i++) {
                     const [nom, ape, nac, inc, puesto] = cRows[i];
@@ -257,8 +268,30 @@
                     items.push({ id: 'reposo', title: 'Todo en orden', msg: 'No hay avisos ni eventos pendientes.', cat: 'Reposo', badge: '' });
                 }
 
+                // MODIFICACIÓN: Guardamos la lista de notificaciones obtenidas correctamente
+                ultimosDatosValidos = items;
                 renderItems(items);
-            } catch (e) { console.error(e); }
+
+                // MODIFICACIÓN 2: En caso de éxito, programamos el próximo refresco estándar en 1 minuto (60000 ms)
+                temporizadorActualizacion = setTimeout(updateDashboard, 60000);
+
+            } catch (e) { 
+                console.error("Fallo al actualizar el panel: ", e); 
+                
+                const tarjError = {
+                    id: 'error-conexion',
+                    title: 'Sin conexión a internet',
+                    msg: 'No se han podido actualizar los datos. Mostrando información previa...',
+                    cat: 'Mantenimiento',
+                    badge: 'REINTENTANDO'
+                };
+
+                // MODIFICACIÓN 1: Añadimos el aviso de error arriba SIN borrar las tarjetas existentes
+                renderItems([tarjError, ...ultimosDatosValidos]);
+
+                // MODIFICACIÓN 2: En caso de error, hacemos un reintento rápido a los 15 segundos (15000 ms)
+                temporizadorActualizacion = setTimeout(updateDashboard, 15000);
+            }
         }
 
         function renderItems(data) {
@@ -307,7 +340,7 @@
             });
         }
         
-        setInterval(updateDashboard, 15000);
+        // MODIFICACIÓN: Llamada inicial para arrancar el ciclo dinámico
         updateDashboard();
     </script>
 </body>
