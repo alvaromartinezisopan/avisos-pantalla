@@ -257,22 +257,42 @@
 
     function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-    // Etiqueta con rango: HOY | 10:00 – 12:00, MAÑANA | ..., o "LUN 9 – MIÉ 11 NOV" si dura varios días
+    // Insignia de fecha: MISMA logica que la tele (index.html). Hoy / Mañana / Vie (13/11) esta semana / 13/11/26 despues; rangos: "Hoy – Vie (13/11)".
     const DIAS = ['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'], MESES = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+    const DIAS_CORTOS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+    const DIAS_COMPLETOS = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
     function parseISO(s) { const p = s.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); }
     function etiquetaFecha(fISO, h, hFin, fFinISO) {
         const n = new Date(); const hoy = new Date(n.getFullYear(), n.getMonth(), n.getDate());
-        if (fISO && fFinISO && fFinISO !== fISO) {
-            const f1 = parseISO(fISO), f2 = parseISO(fFinISO);
-            return DIAS[f1.getDay()] + ' ' + f1.getDate() + ' – ' + DIAS[f2.getDay()] + ' ' + f2.getDate() + ' ' + MESES[f2.getMonth()];
-        }
-        let label = "";
+        const inicioSemana = new Date(hoy); inicioSemana.setDate(inicioSemana.getDate() - ((inicioSemana.getDay() + 6) % 7));
+        const finSemana = new Date(inicioSemana); finSemana.setDate(finSemana.getDate() + 6);
+        const dd = x => ('0' + x.getDate()).slice(-2) + '/' + ('0' + (x.getMonth() + 1)).slice(-2);
+        const extremo = (fecha, esInicio) => {
+            const dia = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+            const dayDiff = Math.round((dia.getTime() - hoy.getTime()) / 86400000);
+            if (dia < hoy) return esInicio ? DIAS[dia.getDay()] + ' ' + dia.getDate() : DIAS[dia.getDay()] + ' ' + dia.getDate() + ' ' + MESES[dia.getMonth()];
+            if (dayDiff === 0) return 'Hoy';
+            if (esInicio && dayDiff === 1) return 'Mañana';
+            if (dia > hoy && dia <= finSemana) return DIAS_CORTOS[dia.getDay()] + ' (' + dd(dia) + ')';
+            return dd(dia) + '/' + String(dia.getFullYear()).slice(-2);
+        };
+        let label = '';
+        let f = null;
         if (fISO) {
-            const dias = Math.round((parseISO(fISO) - hoy) / 86400000);
-            label = dias === 0 ? "HOY" : (dias === 1 ? "MAÑANA" : fISO.split('-').reverse().join('/').replace(/(\d{2}\/\d{2}\/)\d{2}(\d{2})$/, '$1$2'));
+            f = parseISO(fISO);
+            const dayDiff = Math.round((f.getTime() - hoy.getTime()) / 86400000);
+            if (dayDiff === 0) label = 'HOY';
+            else if (dayDiff === 1) label = 'MAÑANA';
+            else if (f > hoy && f <= finSemana) { const nd = DIAS_COMPLETOS[f.getDay()]; label = nd.charAt(0).toUpperCase() + nd.slice(1) + ' (' + dd(f) + ')'; }
+            else label = dd(f) + '/' + String(f.getFullYear()).slice(-2);
         }
-        const horas = h ? (hFin ? h + ' – ' + hFin : h) : '';
-        return horas ? (label ? label + '\n' + horas : horas) : label;
+        let badge = h ? (label ? label + '\n' + h : h) : label;
+        if (f) {
+            const ff = fFinISO ? parseISO(fFinISO) : null;
+            if (ff && ff.getTime() !== f.getTime()) badge = extremo(f, true) + ' – ' + extremo(ff, false);
+            else if (hFin && h) badge = label + '\n' + h + ' – ' + hFin;
+        }
+        return badge;
     }
 
     // Texto que explica en claro cuándo estará en pantalla (propuesta de reglas, aún sin backend)
