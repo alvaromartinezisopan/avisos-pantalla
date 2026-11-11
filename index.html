@@ -430,6 +430,12 @@
                 }
 
                 // 1. Notificaciones normales: se leen del Apps Script lector (doGet), que solo devuelve los avisos activos
+                // Todas las lecturas arrancan a la vez (antes iban una detrás de otra): avisos, configuración, hoja de celebraciones y festivos.
+                const pConfig = leerConfig();
+                const pCelebs = CELEB_SHEET_URL ? fetch(`${CELEB_SHEET_URL}&t=${Date.now()}`).then(r => r.text()) : Promise.resolve(celebracionesFicticias());
+                const pFest = cargarFestivos(ahora.getFullYear());
+                pCelebs.catch(() => {}); pFest.catch(() => {});
+
                 const filas = await leerAvisos();
                 if (!Array.isArray(filas)) throw new Error('Respuesta inesperada del script: ' + JSON.stringify(filas).slice(0, 200));
 
@@ -437,12 +443,19 @@
                 items = avisosDesdeFilas(filas, ahora, hoy);
 
                 // Segundos entre paginas (config de la hoja; por defecto 10)
-                const cfg = await leerConfig();
+                const cfg = await pConfig;
                 const seg = cfg && Number(cfg.segundos);
                 if (seg && seg >= 3 && seg <= 120 && seg !== PAGINA_SEGUNDOS) { PAGINA_SEGUNDOS = seg; repaginar(); }
 
+                // Primera carga: se muestran ya los avisos de la hoja sin esperar a cumpleaños y festivos (que se añaden después).
+                // Solo si hay avisos: con la lista vacía se espera, para no enseñar "Todo en orden" antes de tiempo.
+                if (ultimosDatosValidos.length === 0 && items.length > 0) {
+                    ultimosDatosValidos = items.slice();
+                    renderItems(items.slice());
+                }
+
                 // 2. Celebraciones
-                const cText = CELEB_SHEET_URL ? await (await fetch(`${CELEB_SHEET_URL}&t=${Date.now()}`)).text() : celebracionesFicticias();
+                const cText = await pCelebs;
                 const cRows = cText.split('\n').map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => val.replace(/^"|"$/g, '')));
                 const celebsLista = [];
 
@@ -472,7 +485,7 @@
 
                 // 3. Tarjeta resumen: lo celebrado en fin de semana o festivo se recuerda el primer día laborable siguiente.
                 try {
-                    const fest = await cargarFestivos(ahora.getFullYear());
+                    const fest = await pFest;
                     if (esLaborable(hoy, fest) || FORZAR_RESUMEN) {
                         const DIAS2 = ['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'], MESES2 = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
                         const resumen = [];
