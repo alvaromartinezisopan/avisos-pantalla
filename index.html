@@ -523,24 +523,8 @@
             } catch (e) { 
                 console.error("Fallo al actualizar el panel: ", e); 
                 
-                const tarjError = {
-                    id: 'error-conexion',
-                    title: 'Sin conexión a internet',
-                    msg: 'No se han podido actualizar los datos. Mostrando información previa...',
-                    cat: 'Mantenimiento',
-                    badge: 'REINTENTANDO'
-                };
-
-                // MODIFICACIÓN 1: Añadimos el aviso de error arriba SIN borrar las tarjetas existentes
-                // Sin conexión: los avisos de la hoja se vuelven a evaluar con el reloj actual (así lo ya retirado no reaparece); celebraciones, como antes.
-                let previos = ultimosDatosValidos;
-                if (ultimasFilas) {
-                    const a2 = reloj(), h2 = new Date(a2.getFullYear(), a2.getMonth(), a2.getDate());
-                    previos = [...avisosDesdeFilas(ultimasFilas, a2, h2), ...ultimosDatosValidos.filter(x => String(x.id).startsWith('c-'))];
-                }
-                renderItems([tarjError, ...previos]);
-
-                // MODIFICACIÓN 2: En caso de error, hacemos un reintento rápido a los 15 segundos (15000 ms)
+                // Conservamos la última vista válida sin añadir avisos ni alterar sus tarjetas.
+                // La recuperación es automática: reintentamos la lectura dentro de 15 segundos.
                 temporizadorActualizacion = setTimeout(updateDashboard, 15000);
             }
         }
