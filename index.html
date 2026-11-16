@@ -97,6 +97,17 @@
         .rl-tipo { font-size: calc(var(--u)*14); font-weight: 700; color: rgba(0,0,0,.55); }
         .rl-aviso { font-size: calc(var(--u)*12); font-weight: 700; color: #8a5a00; margin-top: calc(var(--u)*4); }
 
+
+        /* Resumen: columnas compartidas y puesto debajo del nombre. */
+        .resumen-lineas { display: grid; grid-template-columns: calc(var(--u)*100) minmax(0,1fr) calc(var(--u)*92); column-gap: calc(var(--u)*14); row-gap: calc(var(--u)*12); }
+        .rl { display: contents; }
+        .rl-fecha { align-self: start; justify-self: start; white-space: nowrap; }
+        .rl-persona { display: flex; flex-direction: column; gap: calc(var(--u)*2); min-width: 0; align-self: start; }
+        .rl-nombre { line-height: 1.2; overflow-wrap: anywhere; }
+        .rl-depto { font-size: calc(var(--u)*14); font-weight: 600; color: rgba(0,0,0,.6); line-height: 1.15; }
+        .rl-tipo { align-self: start; line-height: calc(var(--u)*21.6); }
+        .rl-aviso { grid-column: 1 / -1; }
+
         /* FONDO CONFETI ESTÁTICO (Sin emojis ni animaciones) */
         .bg-confetti {
             background-color: #ffeef8 !important;
@@ -466,7 +477,7 @@
                     const dN = nac?.split('/');
                     const dI = inc?.split('/');
                     const cargo = puesto ? puesto.trim() : "";
-                    celebsLista.push({ full, dN, dI });
+                    celebsLista.push({ full, dN, dI, cargo });
 
                     if (dN && parseInt(dN[0]) === ahora.getDate() && parseInt(dN[1]) === (ahora.getMonth()+1)) {
                         items.push({ id: `c-n-${i}`, title: `¡FELICIDADES, ${full}!`, role: cargo, msg: "Todo el equipo de Isopan Ibérica te desea un día excelente.", cat: "Celebracion", sub: "Star", badge: "HOY" });
@@ -497,9 +508,9 @@
                             const etiqueta = DIAS2[atras.getDay()] + ' ' + atras.getDate() + ' ' + MESES2[atras.getMonth()];
                             celebsLista.forEach(c => {
                                 if (c.dN && parseInt(c.dN[0]) === dd && parseInt(c.dN[1]) === mm)
-                                    resumen.push({ etiqueta, nombre: c.full, tipo: 'Cumpleaños' });
+                                    resumen.push({ etiqueta, nombre: c.full, cargo: c.cargo, tipo: 'Cumpleaños' });
                                 if (c.dI && parseInt(c.dI[0]) === dd && parseInt(c.dI[1]) === mm && (ahora.getFullYear() - parseInt(c.dI[2])) > 0)
-                                    resumen.push({ etiqueta, nombre: c.full, tipo: (ahora.getFullYear() - parseInt(c.dI[2])) + ' años en el equipo' });
+                                    resumen.push({ etiqueta, nombre: c.full, cargo: c.cargo, tipo: (ahora.getFullYear() - parseInt(c.dI[2])) + ' años en el equipo' });
                             });
                         }
                         if (resumen.length) {
@@ -527,6 +538,10 @@
                 // La recuperación es automática: reintentamos la lectura dentro de 15 segundos.
                 temporizadorActualizacion = setTimeout(updateDashboard, 15000);
             }
+        }
+
+        function escaparTexto(valor) {
+            return String(valor == null ? '' : valor).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         }
 
         function renderItems(data) {
@@ -574,7 +589,7 @@
                         '<div class="title">' + d.title + '</div>' +
                         '<div class="job-role">CUMPLEAÑOS Y ANIVERSARIOS</div>' +
                         '<div class="resumen-lineas">' + (d.lineas || []).map(l =>
-                            '<div class="rl"><span class="rl-fecha">' + l.etiqueta + '</span><span class="rl-nombre">' + l.nombre + '</span><span class="rl-tipo">' + l.tipo + '</span></div>'
+                            '<div class="rl"><span class="rl-fecha">' + l.etiqueta + '</span><span class="rl-persona"><span class="rl-nombre">' + escaparTexto(l.nombre) + '</span>' + (l.cargo ? '<span class="rl-depto">' + escaparTexto(l.cargo) + '</span>' : '') + '</span><span class="rl-tipo">' + l.tipo + '</span></div>'
                         ).join('') + (d.aviso ? '<div class="rl-aviso">' + d.aviso + '</div>' : '') + '</div>';
                     badge.style.display = 'none';
                     const iconBox0 = el.querySelector('.app-icon');
