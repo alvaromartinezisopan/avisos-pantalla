@@ -89,7 +89,7 @@
         .rp-titulo { font-size: calc(var(--u)*36); font-weight: 900; color: #14355e; letter-spacing: calc(var(--u)*-0.8); }
         .rp-sub { font-size: calc(var(--u)*18); font-weight: 600; color: #5a6b82; }
 
-        /* Tarjeta resumen "Se nos pasó celebrar" */
+        /* Tarjeta resumen "Estos días hemos tenido algo que celebrar..." */
         .resumen-lineas { display: flex; flex-direction: column; gap: calc(var(--u)*8); z-index: 2; position: relative; margin-top: calc(var(--u)*6); }
         .rl { display: flex; align-items: center; gap: calc(var(--u)*14); }
         .rl-fecha { flex: 0 0 auto; font-size: calc(var(--u)*13); font-weight: 800; color: #0a64d8; background: rgba(255,255,255,.8); padding: calc(var(--u)*3) calc(var(--u)*10); border-radius: calc(var(--u)*9); }
@@ -503,7 +503,7 @@
                             });
                         }
                         if (resumen.length) {
-                            items.push({ id: 'resumen-celeb', title: 'Se nos pasó celebrar', msg: '', cat: 'ResumenCeleb', badge: '', lineas: resumen,
+                            items.push({ id: 'resumen-celeb', title: 'Estos días hemos tenido algo que celebrar...', msg: '', cat: 'ResumenCeleb', badge: '', lineas: resumen,
                                 aviso: fest.completo ? '' : 'Festivos oficiales de ' + ahora.getFullYear() + ' no disponibles: solo se han tenido en cuenta fines de semana.' });
                         }
                     }
