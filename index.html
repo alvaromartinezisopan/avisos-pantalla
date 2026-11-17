@@ -556,6 +556,10 @@
                     el.innerHTML = `<div class="app-icon"></div><div class="content"><div class="title"></div><div class="job-role"></div><div class="message"></div></div><div class="date-badge"></div>`;
                     stack.appendChild(el); setTimeout(() => el.classList.add('show'), 100);
                 }
+                // Los estados especiales sustituyen el interior: restaurar la plantilla antes de reutilizar la tarjeta.
+                if (!el.querySelector('.title') || !el.querySelector('.message')) {
+                    el.innerHTML = `<div class="app-icon"></div><div class="content"><div class="title"></div><div class="job-role"></div><div class="message"></div></div><div class="date-badge"></div>`;
+                }
                 const tema = assets[d.cat] || assets['Aviso'];
                 el.style.order = i;
                 el.style.backgroundColor = tema.bg;
